@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Reflection.cpp">
+      <Filter>Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="UObject.cpp">
+      <Filter>Object Struct</Filter>
+    </ClCompile>
+    <ClCompile Include="UField.cpp">
+      <Filter>Object Struct</Filter>
+    </ClCompile>
+    <ClCompile Include="UFunction.cpp">
+      <Filter>Object Struct</Filter>
+    </ClCompile>
+    <ClCompile Include="UProperty.cpp">
+      <Filter>Object Struct</Filter>
+    </ClCompile>
+    <ClCompile Include="SomeTestClass.cpp">
+      <Filter>Reflection Test Class</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticRedundantTest.cpp">
+      <Filter>Reflection Test Class</Filter>
+    </ClCompile>
+    <ClCompile Include="GarbageCollector.cpp">
+      <Filter>Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectPool.cpp">
+      <Filter>Tool</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="support">
+      <UniqueIdentifier>{b2b59032-fa98-4a9c-a71d-0c92a63a484e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object Struct">
+      <UniqueIdentifier>{4c2332c5-c325-4434-aadd-a2cfcefa012d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Reflection Test Class">
+      <UniqueIdentifier>{bfdc31cb-7c32-4787-8af8-bb34808276e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tool">
+      <UniqueIdentifier>{1df17df9-3569-4aca-8fdc-48ab4f197a11}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="global.h">
+      <Filter>support</Filter>
+    </ClInclude>
+    <ClInclude Include="Reflection.h">
+      <Filter>Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="UObject.h">
+      <Filter>Object Struct</Filter>
+    </ClInclude>
+    <ClInclude Include="UField.h">
+      <Filter>Object Struct</Filter>
+    </ClInclude>
+    <ClInclude Include="UFunction.h">
+      <Filter>Object Struct</Filter>
+    </ClInclude>
+    <ClInclude Include="UProperty.h">
+      <Filter>Object Struct</Filter>
+    </ClInclude>
+    <ClInclude Include="SomeTestClass.h">
+      <Filter>Reflection Test Class</Filter>
+    </ClInclude>
+    <ClInclude Include="delta_timer.h">
+      <Filter>support</Filter>
+    </ClInclude>
+    <ClInclude Include="StaticRedundantTest.h">
+      <Filter>Reflection Test Class</Filter>
+    </ClInclude>
+    <ClInclude Include="GarbageCollector.h">
+      <Filter>Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectPool.h">
+      <Filter>Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="helper_method.h">
+      <Filter>support</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
