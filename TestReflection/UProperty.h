@@ -16,9 +16,18 @@ public:
 		, property_size(_size)
 	{}
 
+	UProperty(const UProperty& other) = delete;
+	UProperty(UProperty&& other) = delete;
+	UProperty operator= (const UProperty& other) = delete;
+	UProperty operator= (UProperty&& other) = delete;
+
 	~UProperty();
 
-public:
+	size_t GetTypeHash() const { return property_type_hash; }
+	void* GetAddress() const { return property_address; }
+	size_t GetSize() const { return property_size; }
+
+private:
 	size_t	property_type_hash;
 	void*	property_address;
 	size_t	property_size;

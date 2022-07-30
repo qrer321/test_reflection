@@ -1,20 +1,15 @@
 #include "Parser.h"
 #include <iostream>
 
-Parser::Parser()
-	: files()
+void Parser::SettingParser(const std::string& directory_path, const std::string& path_for_generated_file)
 {
-}
-
-void Parser::SettingParser(const std::string& _directory_path, const std::string& _path_for_generated_file)
-{
-	path_for_generated_file = _path_for_generated_file;
-	GetFilesNameFromDirectory(_directory_path, files);
+	path_for_generated_file_ = path_for_generated_file;
+	GetFilesNameFromDirectory(directory_path, files_);
 }
 
 void Parser::RunParser()
 {
-	for (const auto& each_file : files)
+	for (const auto& each_file : files_)
 	{
 		ExtractDataFromFile(each_file);
 	}
@@ -22,40 +17,39 @@ void Parser::RunParser()
 
 void Parser::ClearParser()
 {
-	if (0 == files.capacity())
+	if (0 == files_.capacity())
 	{
 		return;
 	}
 
-	files.clear();
-	std::vector<std::string>().swap(files);
+	files_.clear();
+	std::vector<std::string>().swap(files_);
 }
 
-void Parser::GetFilesNameFromDirectory(const std::string& _path, std::vector<std::string>& _files)
+void Parser::GetFilesNameFromDirectory(const std::string& path, std::vector<std::string>& files) const
 {
-	if (false == std::filesystem::exists(_path))
+	if (false == std::filesystem::exists(path))
 	{
 		assert(false);
 		return;
 	}
 
-	for (const std::filesystem::directory_entry& elem : std::filesystem::recursive_directory_iterator(_path))
+	for (const std::filesystem::directory_entry& elem : std::filesystem::recursive_directory_iterator(path))
 	{
-		std::filesystem::path file_path = elem.path();
-		if (".h" == file_path.extension())
+		if (".h" == elem.path().extension())
 		{
-			_files.push_back(file_path.string());
+			files.push_back(elem.path().string());
 		}
 	}
 }
 
 // 추후 find 함수의 성능 개선을 위해 Boyer-Moore 알고리즘 혹은 Knuth-Morris-Pratt 알고리즘을 고려해본다.
-void Parser::ExtractDataFromFile(const std::string& _file_path)
+void Parser::ExtractDataFromFile(const std::string& file_path)
 {
 	// read file
 	std::string file_string;
 	std::ostringstream ss = {};
-	std::ifstream input_file(_file_path);
+	std::ifstream input_file(file_path);
 	if (false == input_file.is_open())
 	{
 		std::cerr << "Could not open the file" << std::endl;
@@ -96,7 +90,7 @@ void Parser::ExtractDataFromFile(const std::string& _file_path)
 	}
 
 	find_start_pos += find_string.length();
-	find_end_pos = file_string.find(" ", find_start_pos);
+	find_end_pos = file_string.find(' ', find_start_pos);
 	class_name = file_string.substr(find_start_pos, find_end_pos - find_start_pos);
 
 
@@ -118,14 +112,14 @@ void Parser::ExtractDataFromFile(const std::string& _file_path)
 
 		// find property type
 		find_start_pos += find_string.length();
-		find_end_pos = file_string.find(" ", find_start_pos);
+		find_end_pos = file_string.find(' ', find_start_pos);
 		CheckErrorPos(find_end_pos);
 
 		property_type = file_string.substr(find_start_pos, find_end_pos - find_start_pos);
 
 		// find property name
 		find_start_pos = find_end_pos + 1;
-		find_end_pos = file_string.find(";", find_start_pos);
+		find_end_pos = file_string.find(';', find_start_pos);
 		CheckErrorPos(find_end_pos);
 
 		property_name = file_string.substr(find_start_pos, find_end_pos - find_start_pos);
@@ -157,21 +151,21 @@ void Parser::ExtractDataFromFile(const std::string& _file_path)
 
 		// find function return type
 		find_start_pos += find_string.length();
-		find_end_pos = file_string.find(" ", find_start_pos);
+		find_end_pos = file_string.find(' ', find_start_pos);
 		CheckErrorPos(find_end_pos);
 
 		function_return_type = file_string.substr(find_start_pos, find_end_pos - find_start_pos);
 
 		// find function name
 		find_start_pos = find_end_pos + 1;
-		find_end_pos = file_string.find("(", find_start_pos);
+		find_end_pos = file_string.find('(', find_start_pos);
 		CheckErrorPos(find_end_pos);
 
 		function_name = file_string.substr(find_start_pos, find_end_pos - find_start_pos);
 
 		// find function parameters
 		size_t function_param_end_pos = 0;
-		function_param_end_pos = file_string.find(")", find_end_pos);
+		function_param_end_pos = file_string.find(')', find_end_pos);
 		if (1 < function_param_end_pos - find_end_pos)
 		{
 			std::string param;
@@ -179,7 +173,7 @@ void Parser::ExtractDataFromFile(const std::string& _file_path)
 			while (false == end_of_line)
 			{
 				find_start_pos = find_end_pos + 1;
-				find_end_pos = file_string.find(" ", find_start_pos);
+				find_end_pos = file_string.find(' ', find_start_pos);
 				CheckErrorPos(find_end_pos);
 				
 				param = file_string.substr(find_start_pos, find_end_pos - find_start_pos);
@@ -200,19 +194,19 @@ void Parser::ExtractDataFromFile(const std::string& _file_path)
 
 	}
 
-	GenerateHeaderFile(class_name, properties_info, functions_info, path_for_generated_file);
+	GenerateHeaderFile(class_name, properties_info, functions_info, path_for_generated_file_);
 }
 
-void Parser::GenerateHeaderFile(const std::string& _class_name, const std::vector<PropertyInfo>& _properties_info, const std::vector<FunctionInfo>& _functions_info, const std::string& _target_path)
+void Parser::GenerateHeaderFile(const std::string& class_name, const std::vector<PropertyInfo>& properties_info, const std::vector<FunctionInfo>& functions_info, const std::string& target_path) const
 {
 	std::string gen_file_path;
-	if ("" == _target_path)
+	if (true == target_path.empty())
 	{
-		gen_file_path = std::filesystem::current_path().string() + "\\" + _class_name + ".generated.h";
+		gen_file_path = std::filesystem::current_path().string() + "\\" + class_name + ".generated.h";
 	}
 	else
 	{
-		gen_file_path = _target_path + _class_name + ".generated.h";
+		gen_file_path = target_path + class_name + ".generated.h";
 	}
 
 	if (true == std::filesystem::exists(gen_file_path))
@@ -223,10 +217,10 @@ void Parser::GenerateHeaderFile(const std::string& _class_name, const std::vecto
 	std::ofstream gen_file(gen_file_path);
 
 	std::string generated_string =
-		"#ifdef " + _class_name + "_generated_h\n" +
-		"#error " + _class_name + ".generated.h already included, missing '#pragma once' in " + _class_name + ".h\n" +
+		"#ifdef " + class_name + "_generated_h\n" +
+		"#error " + class_name + ".generated.h already included, missing '#pragma once' in " + class_name + ".h\n" +
 		"#endif\n" +
-		"#define " + _class_name + "_generated_h\n" +
+		"#define " + class_name + "_generated_h\n" +
 		"\n" +
 		"#ifdef UCLASS\n" +
 		"#undef UCLASS\n" +
@@ -245,10 +239,9 @@ void Parser::GenerateHeaderFile(const std::string& _class_name, const std::vecto
 		"\t\t\treflection_properties = \\\n" +
 		"\t\t\t{ \\\n";
 
-	for (PropertyInfo p_info : _properties_info)
+	for (const PropertyInfo& p_info : properties_info)
 	{
-		generated_string = generated_string +
-			"\t\t\t\t{\"" + p_info.name + "\", new UProperty(typeid(" + p_info.type + ").hash_code(), &" + p_info.name +", sizeof(" + p_info.name + "))}, \\\n";
+		generated_string += "\t\t\t\t{\"" + p_info.name + "\", new UProperty(typeid(" + p_info.type + ").hash_code(), &" + p_info.name +", sizeof(" + p_info.name + "))}, \\\n";
 	}
 
 	generated_string = generated_string +
@@ -256,12 +249,11 @@ void Parser::GenerateHeaderFile(const std::string& _class_name, const std::vecto
 		"\t\t\treflection_functions = \\\n" +
 		"\t\t\t{ \\\n";
 
-	for (FunctionInfo f_info : _functions_info)
+	for (const FunctionInfo& f_info : functions_info)
 	{
-		generated_string = generated_string +
-			"\t\t\t\t{\"" + f_info.name + "\", new UFunction(\"" + f_info.return_type + "\", { ";
+		generated_string += "\t\t\t\t{\"" + f_info.name + "\", new UFunction(\"" + f_info.return_type + "\", { ";
 
-		for (std::string param_string : f_info.params)
+		for (const std::string& param_string : f_info.params)
 		{
 			generated_string = generated_string +
 				"\"" + param_string + "\", ";
@@ -273,10 +265,10 @@ void Parser::GenerateHeaderFile(const std::string& _class_name, const std::vecto
 		
 	generated_string = generated_string +
 		"\t\t\t}; \\\n \t\t\t\\\n" +
-		"\t\t\tSetProperties(std::move(reflection_properties)); \\\n" +
-		"\t\t\tSetFunctions(std::move(reflection_functions)); \\\n" +
+		"\t\t\tSetProperties(reflection_properties); \\\n" +
+		"\t\t\tSetFunctions(reflection_functions); \\\n" +
 		"\t\t} \\\n\t\t\\\n" +
-		"\t\t" + _class_name + "() \\\n" +
+		"\t\t" + class_name + "() \\\n" +
 		"\t\t{ \\\n" +
 		"\t\t\tAddReflectionInfo(); \\\n\t\t}" +
 		"\n\n\n";
@@ -309,7 +301,7 @@ void Parser::CheckErrorPos(size_t find_pos)
 	return;
 }
 
-size_t Parser::GetClosestEndPos(const std::string& _source, const size_t _start_offset, bool& _is_end_of_line)
+size_t Parser::GetClosestEndPos(const std::string& source, const size_t start_offset, bool& is_end_of_line) const
 {
 	// check closest end point
 	static std::string check_string_arr[] = { ",", ");", ";", " {" };
@@ -317,11 +309,11 @@ size_t Parser::GetClosestEndPos(const std::string& _source, const size_t _start_
 	size_t closest_point = UINT_MAX;
 	size_t temp_pos = 0;
 	std::string check_string;
-	size_t arr_size = sizeof(check_string_arr) / sizeof(check_string_arr[0]);
+	size_t arr_size = std::size(check_string_arr);
 
 	for (size_t i = 0; i < arr_size; ++i)
 	{
-		temp_pos = _source.find(check_string_arr[i], _start_offset);
+		temp_pos = source.find(check_string_arr[i], start_offset);
 		if (std::string::npos != temp_pos &&
 			closest_point > temp_pos)
 		{
@@ -332,7 +324,7 @@ size_t Parser::GetClosestEndPos(const std::string& _source, const size_t _start_
 
 	if (check_string == ");" || check_string == ";" || check_string == " {")
 	{
-		_is_end_of_line = true;
+		is_end_of_line = true;
 	}
 
 	return closest_point;

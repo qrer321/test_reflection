@@ -8,7 +8,7 @@ public:
 	~delta_timer() = default;
 
 	void Tick();
-	float GetDelta();
+	float GetDelta() const;
 
 private:
 	std::chrono::time_point<std::chrono::system_clock> chrono_start;
@@ -16,14 +16,14 @@ private:
 	std::chrono::duration<float, std::ratio<1, 1000>> chrono_delta;
 };
 
-delta_timer::delta_timer()
+inline delta_timer::delta_timer()
 	: chrono_start()
 	, chrono_end()
 	, chrono_delta()
 {
 }
 
-void delta_timer::Tick()
+inline void delta_timer::Tick()
 {
 	chrono_start = std::chrono::system_clock::now();
 	chrono_end = std::chrono::system_clock::now();
@@ -31,7 +31,7 @@ void delta_timer::Tick()
 	chrono_delta = chrono_end - chrono_start;
 }
 
-float delta_timer::GetDelta()
+inline float delta_timer::GetDelta() const
 {
 	return chrono_delta.count();
 }

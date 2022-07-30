@@ -1,4 +1,6 @@
 #pragma once
+#include <utility>
+
 #include "global.h"
 #include "UField.h"
 #include "UProperty.h"
@@ -18,48 +20,48 @@ public:
 	virtual ~UObject();
 
 	template <typename T>
-	T GetPropertyValue(std::string _prop_name) const;
+	T GetPropertyValue(std::string prop_name) const;
 	template <typename T>
-	void SetPropertyValue(std::string _prop_name, T _value);
+	void SetPropertyValue(std::string prop_name, T value);
 
 private:
-	UProperty* GetProperty(std::string _prop_name) const;
-	UFunction* GetFunction(std::string _func_name) const;
+	UProperty* GetProperty(std::string prop_name) const;
+	UFunction* GetFunction(std::string func_name) const;
 
 protected:
-	void SetProperties(std::unordered_map<std::string, UProperty*> _properties) { properties = _properties; }
-	void SetFunctions(std::unordered_map<std::string, UFunction*> _functions) { functions = _functions; }
+	void SetProperties(const std::unordered_map<std::string, UProperty*>& properties) { properties_ = properties; }
+	void SetFunctions(const std::unordered_map<std::string, UFunction*>& functions) { functions_ = functions; }
 
 private:
-	std::string object_name;
+	std::string object_name_;
 
-	std::unordered_map<std::string, UProperty*> properties;
-	std::unordered_map<std::string, UFunction*> functions;
+	std::unordered_map<std::string, UProperty*> properties_;
+	std::unordered_map<std::string, UFunction*> functions_;
 };
 
 template<typename T>
-inline T UObject::GetPropertyValue(std::string _prop_name) const
+inline T UObject::GetPropertyValue(std::string prop_name) const
 {
-	UProperty* temp_prop = GetProperty(_prop_name);
+	UProperty* temp_prop = GetProperty(prop_name);
 	if (nullptr == temp_prop)
 	{
 		return T();
 	}
 
-	return *(reinterpret_cast<T*>(temp_prop->property_address));
+	return *(static_cast<T*>(temp_prop->GetAddress()));
 }
 
 template<typename T>
-inline void UObject::SetPropertyValue(std::string _prop_name, T _value)
+inline void UObject::SetPropertyValue(std::string prop_name, T value)
 {
-	UProperty* prop_info = GetProperty(_prop_name);
+	UProperty* prop_info = GetProperty(prop_name);
 	if (nullptr == prop_info)
 	{
 		return;
 	}
 
-	if (prop_info->property_type_hash == typeid(T).hash_code())
+	if (prop_info->GetTypeHash() == typeid(T).hash_code())
 	{
-		*(reinterpret_cast<T*>(prop_info->property_address)) = _value;
+		*(static_cast<T*>(prop_info->GetAddress())) = value;
 	}
 }

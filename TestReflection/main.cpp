@@ -37,12 +37,6 @@ void TestFunction()
 	SomeTestClass specific_1;
 	SomeTestClass specific_2;
 
-	specific_1.test_int_1 = 10;
-	specific_2.test_int_1 = 2;
-
-	specific_1.test_int_2 = 10;
-	specific_2.test_int_2 = 2;
-
 	specific_1.SetPropertyValue<int>("test_int_2", 99);
 	specific_1.SetPropertyValue<SomeTestClass*>("pointing_other_object", &specific_2);
 

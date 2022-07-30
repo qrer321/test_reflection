@@ -15,13 +15,11 @@ public:
 	UFUNCTION()
 	void test_function_1() {}
 
-public:
+private:
 	UPROPERTY()
 	int test_int_1;
 	UPROPERTY()
 	int test_int_2;
-
-	float* test_address = nullptr;
 
 	UPROPERTY()
 	SomeTestClass* pointing_other_object;

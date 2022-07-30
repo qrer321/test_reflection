@@ -2,14 +2,14 @@
 
 UObject::~UObject()
 {
-	auto p_iter = properties.begin();
-	while (properties.end() != p_iter)
+	auto p_iter = properties_.begin();
+	while (properties_.end() != p_iter)
 	{
 		delete p_iter++->second;
 	}
 
-	auto f_iter = functions.begin();
-	while (functions.end() != f_iter)
+	auto f_iter = functions_.begin();
+	while (functions_.end() != f_iter)
 	{
 		delete f_iter++->second;
 	}
@@ -17,8 +17,8 @@ UObject::~UObject()
 
 UProperty* UObject::GetProperty(std::string _prop_name) const
 {
-	auto iter = properties.find(_prop_name);
-	if (iter != properties.end())
+	auto iter = properties_.find(_prop_name);
+	if (iter != properties_.end())
 	{
 		return iter->second;
 	}
@@ -28,8 +28,8 @@ UProperty* UObject::GetProperty(std::string _prop_name) const
 
 UFunction* UObject::GetFunction(std::string _func_name) const
 {
-	auto iter = functions.find(_func_name);
-	if (iter != functions.end())
+	auto iter = functions_.find(_func_name);
+	if (iter != functions_.end())
 	{
 		return iter->second;
 	}

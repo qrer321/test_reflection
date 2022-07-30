@@ -7,7 +7,7 @@ public:
 	GarbageCollector() = default;
 	~GarbageCollector() = default;
 
-	GarbageCollector* GetInstance()
+	static GarbageCollector* GetInstance()
 	{
 		if (nullptr == gc_instance)
 		{

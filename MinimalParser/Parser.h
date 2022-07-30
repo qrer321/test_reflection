@@ -22,21 +22,27 @@ struct FunctionInfo
 class Parser
 {
 public:
-	Parser();
+	Parser() = default;
 	~Parser() = default;
 
-	void SettingParser(const std::string& _directory_path, const std::string& _path_for_generated_file);
+	Parser(const Parser& other) = delete;
+	Parser(Parser&& other) = delete;
+
+	Parser operator=(const Parser& other) = delete;
+	Parser operator=(Parser&& other) = delete;
+
+	void SettingParser(const std::string& directory_path, const std::string& path_for_generated_file);
 	void RunParser();
 	void ClearParser();
 
 private:
-	void GetFilesNameFromDirectory(const std::string& _path, std::vector<std::string>& _files);
-	void ExtractDataFromFile(const std::string& _file_path);
-	void GenerateHeaderFile(const std::string& _class_name, const std::vector<PropertyInfo>& _properties_info, const std::vector<FunctionInfo>& _functions_info, const std::string& _target_path);
+	void GetFilesNameFromDirectory(const std::string& path, std::vector<std::string>& files) const;
+	void ExtractDataFromFile(const std::string& file_path);
+	void GenerateHeaderFile(const std::string& class_name, const std::vector<PropertyInfo>& properties_info, const std::vector<FunctionInfo>& functions_info, const std::string& target_path) const;
 
 	void CheckErrorPos(size_t find_pos);
-	size_t GetClosestEndPos(const std::string& source, const size_t start_offset, bool& is_end_of_line);
+	size_t GetClosestEndPos(const std::string& source, const size_t start_offset, bool& is_end_of_line) const;
 
-	std::vector<std::string> files;
-	std::string path_for_generated_file;
+	std::vector<std::string> files_;
+	std::string path_for_generated_file_;
 };
