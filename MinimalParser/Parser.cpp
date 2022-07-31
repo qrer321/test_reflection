@@ -226,14 +226,14 @@ void Parser::GenerateHeaderFile(const std::string& class_name, const std::vector
 		"#undef UCLASS\n" +
 		"#endif\n\n" +
 		"#define UCLASS() \\\n" +
-		"\t\tstatic std::unordered_map<std::string, UProperty*> reflection_properties; \\\n" +
-		"\t\tstatic std::unordered_map<std::string, UFunction*> reflection_functions;\n" +
+		"\t\tstatic std::unordered_map<std::string, class UProperty*> reflection_properties; \\\n" +
+		"\t\tstatic std::unordered_map<std::string, class UFunction*> reflection_functions;\n" +
 		"\n\n" +
 		"#ifdef GENERATED_BODY\n" +
 		"#undef GENERATED_BODY\n" +
 		"#endif\n\n" +
 		"#define GENERATED_BODY() \\\n" +
-		"public: \\\n" +
+		"private: \\\n" +
 		"\t\tvoid AddReflectionInfo() \\\n" +
 		"\t\t{ \\\n" + 
 		"\t\t\treflection_properties = \\\n" +
@@ -241,7 +241,8 @@ void Parser::GenerateHeaderFile(const std::string& class_name, const std::vector
 
 	for (const PropertyInfo& p_info : properties_info)
 	{
-		generated_string += "\t\t\t\t{\"" + p_info.name + "\", new UProperty(typeid(" + p_info.type + ").hash_code(), &" + p_info.name +", sizeof(" + p_info.name + "))}, \\\n";
+		generated_string += "\t\t\t\t{\"" + p_info.name + "\", new UProperty(\"" + p_info.type + "\", "
+		"typeid(" + p_info.type + ").hash_code(), &" + p_info.name +", sizeof(" + p_info.name + ")) }, \\\n";
 	}
 
 	generated_string = generated_string +
@@ -267,7 +268,8 @@ void Parser::GenerateHeaderFile(const std::string& class_name, const std::vector
 		"\t\t\t}; \\\n \t\t\t\\\n" +
 		"\t\t\tSetProperties(reflection_properties); \\\n" +
 		"\t\t\tSetFunctions(reflection_functions); \\\n" +
-		"\t\t} \\\n\t\t\\\n" +
+		"\t\t} \\\n" +
+		"public: \\\n" +
 		"\t\t" + class_name + "() \\\n" +
 		"\t\t{ \\\n" +
 		"\t\t\tAddReflectionInfo(); \\\n\t\t}" +

@@ -5,15 +5,16 @@ class UProperty
 {
 public:
 	UProperty()
-		: property_type_hash(0)
-		, property_address(nullptr)
-		, property_size(0)
+		: property_type_hash_(0)
+		, property_address_(nullptr)
+		, property_size_(0)
 	{}
 
-	UProperty(size_t _type_hash, void* _address, size_t _size)
-		: property_type_hash(_type_hash)
-		, property_address(_address)
-		, property_size(_size)
+	UProperty(std::string type_name, size_t type_hash, void* address, size_t size)
+		: property_type_(std::move(type_name))
+		, property_type_hash_(type_hash)
+		, property_address_(address)
+		, property_size_(size)
 	{}
 
 	UProperty(const UProperty& other) = delete;
@@ -21,14 +22,16 @@ public:
 	UProperty operator= (const UProperty& other) = delete;
 	UProperty operator= (UProperty&& other) = delete;
 
-	~UProperty();
+	~UProperty() = default;
 
-	size_t GetTypeHash() const { return property_type_hash; }
-	void* GetAddress() const { return property_address; }
-	size_t GetSize() const { return property_size; }
+	std::string GetType() const { return property_type_; }
+	size_t GetTypeHash() const { return property_type_hash_; }
+	void* GetAddress() const { return property_address_; }
+	size_t GetSize() const { return property_size_; }
 
 private:
-	size_t	property_type_hash;
-	void*	property_address;
-	size_t	property_size;
+	std::string property_type_;
+	size_t		property_type_hash_;
+	void*		property_address_;
+	size_t		property_size_;
 };

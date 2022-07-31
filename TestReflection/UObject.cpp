@@ -15,9 +15,9 @@ UObject::~UObject()
 	}
 }
 
-UProperty* UObject::GetProperty(std::string _prop_name) const
+UProperty* UObject::GetProperty(const std::string& prop_name) const
 {
-	auto iter = properties_.find(_prop_name);
+	auto iter = properties_.find(prop_name);
 	if (iter != properties_.end())
 	{
 		return iter->second;
@@ -26,9 +26,9 @@ UProperty* UObject::GetProperty(std::string _prop_name) const
 	return nullptr;
 }
 
-UFunction* UObject::GetFunction(std::string _func_name) const
+UFunction* UObject::GetFunction(const std::string& func_name) const
 {
-	auto iter = functions_.find(_func_name);
+	auto iter = functions_.find(func_name);
 	if (iter != functions_.end())
 	{
 		return iter->second;

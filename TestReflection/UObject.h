@@ -1,6 +1,4 @@
 #pragma once
-#include <utility>
-
 #include "global.h"
 #include "UField.h"
 #include "UProperty.h"
@@ -13,27 +11,51 @@
 //		 UEnum
 //		*UProperty*
 
+enum class OBJECT_MARK
+{
+	PENDING_KILL = 1 << 0,
+};
+
 class UObject
 {
 public:
-	UObject() = default;
+	UObject()
+		: collectable_(true)
+	{}
 	virtual ~UObject();
+
+	UObject(const UObject& other) = delete;
+	UObject(UObject&& other) = delete;
+	UObject& operator= (const UObject& other) = delete;
+	UObject& operator= (UObject&& other) = delete;
 
 	template <typename T>
 	T GetPropertyValue(std::string prop_name) const;
+
 	template <typename T>
 	void SetPropertyValue(std::string prop_name, T value);
 
+	void SetCollectable(bool collectable = true) { collectable_ = collectable; }
+	bool IsCollectable() const { return collectable_; }
+
+	void MarkObject() { collectable_ = true; }
+
+	void SetName(const std::string& name) { name_ = name; }
+	std::string GetName() const { return name_; }
+
+	std::unordered_map<std::string, UProperty*>& GetProperties() { return properties_; }
+
 private:
-	UProperty* GetProperty(std::string prop_name) const;
-	UFunction* GetFunction(std::string func_name) const;
+	UProperty* GetProperty(const std::string& prop_name) const;
+	UFunction* GetFunction(const std::string& func_name) const;
 
 protected:
 	void SetProperties(const std::unordered_map<std::string, UProperty*>& properties) { properties_ = properties; }
 	void SetFunctions(const std::unordered_map<std::string, UFunction*>& functions) { functions_ = functions; }
 
 private:
-	std::string object_name_;
+	std::string name_;
+	bool collectable_;
 
 	std::unordered_map<std::string, UProperty*> properties_;
 	std::unordered_map<std::string, UFunction*> functions_;

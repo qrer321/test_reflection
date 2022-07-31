@@ -17,7 +17,7 @@
 #endif
 
 #define GENERATED_BODY() \
-public: \
+private: \
 		void AddReflectionInfo() \
 		{ \
 			reflection_properties = \
@@ -31,7 +31,7 @@ public: \
 			SetProperties(reflection_properties); \
 			SetFunctions(reflection_functions); \
 		} \
-		\
+public: \
 		StaticRedundantTest() \
 		{ \
 			AddReflectionInfo(); \

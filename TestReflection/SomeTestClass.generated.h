@@ -17,14 +17,14 @@
 #endif
 
 #define GENERATED_BODY() \
-public: \
+private: \
 		void AddReflectionInfo() \
 		{ \
 			reflection_properties = \
 			{ \
-				{"test_int_1", new UProperty(typeid(int).hash_code(), &test_int_1, sizeof(test_int_1))}, \
-				{"test_int_2", new UProperty(typeid(int).hash_code(), &test_int_2, sizeof(test_int_2))}, \
-				{"pointing_other_object", new UProperty(typeid(SomeTestClass*).hash_code(), &pointing_other_object, sizeof(pointing_other_object))}, \
+				{"test_int_1", new UProperty("int", typeid(int).hash_code(), &test_int_1, sizeof(test_int_1))}, \
+				{"test_int_2", new UProperty("int", typeid(int).hash_code(), &test_int_2, sizeof(test_int_2))}, \
+				{"pointing_other_object", new UProperty("SomeTestClass*", typeid(SomeTestClass*).hash_code(), &pointing_other_object, sizeof(pointing_other_object))}, \
 			}; \
  			\
 			reflection_functions = \
@@ -36,7 +36,7 @@ public: \
 			SetProperties(reflection_properties); \
 			SetFunctions(reflection_functions); \
 		} \
-		\
+public: \
 		SomeTestClass() \
 		{ \
 			AddReflectionInfo(); \

@@ -25,7 +25,6 @@
 #include "Reflection.h"
 #include "GarbageCollector.h"
 #include "UObject.h"
-#include "ObjectPool.h"
 #include "SomeTestClass.h"
 
 #include "helper_method.h"
@@ -47,24 +46,19 @@ void TestFunction()
 int main()
 {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	//_CrtSetBreakAlloc(1196);
 
-	
-	//SomeTestClass* new_object_test = NewObject<SomeTestClass>();
-	//SomeTestClass* ref_other = NewObject<SomeTestClass>();
-	//new_object_test->test_int_1 = 10;
-	//new_object_test->test_int_2 = 20;
-	//
-	//new_object_test->SetPropertyValue<int>("test_int_1", 66);
-	//new_object_test->SetPropertyValue<int>("test_int_2", 77);
-	//new_object_test->SetPropertyValue<SomeTestClass*>("pointing_other_object", ref_other);
+	TestFunction();
+
+	auto new_test_object_0 = NewObject<SomeTestClass>();
+	auto new_test_object_1 = NewObject<SomeTestClass>();
+	new_test_object_0->SetPropertyValue("pointing_other_object", new_test_object_1);
+	new_test_object_0->SetName("test");
 
 
-	GarbageCollector gc;
-	gc.GetInstance()->CollectObject();
-	gc.GetInstance()->MarkReachableObject();
-	gc.GetInstance()->SweepUnreachableObject();
+	//GarbageCollector::GetInstance()->ActivateGarbageCollector();
 
-
+	menu_output();
 
 	//delta_timer dt;
 	//float running_time = 0.f;
@@ -78,14 +72,15 @@ int main()
 	//		running_time = 0.f;
 	//		[]()
 	//		{
-	//			// Create Object And Collect
+	//			// Create Object And MarkingObject
 	//			SomeTestClass* temp_ = new SomeTestClass;
 	//			temp_->AddReflectionInfo();
 	//		}();
 	//	}
 	//}
 
-	gc.Destroy();
+	GarbageCollector::GetInstance()->Destroy();
+	Reflection::GetInstance()->Destroy();
 
 	return 0;
 }
