@@ -11,17 +11,22 @@
 //		 UEnum
 //		*UProperty*
 
-enum class OBJECT_MARK
+enum OBJECT_FLAG
 {
-	PENDING_KILL = 1 << 0,
+	ROOT = 0x01 << 0,
+	PENDING_KILL = 0x01 << 1,
+	COLLECTABLE = 0x01 << 2,
+	MARKED = 0x01 << 3,
 };
 
 class UObject
 {
 public:
 	UObject()
-		: collectable_(true)
-	{}
+		: flag_()
+	{
+		SetObjectFlag(OBJECT_FLAG::COLLECTABLE);
+	}
 	virtual ~UObject();
 
 	UObject(const UObject& other) = delete;
@@ -29,21 +34,23 @@ public:
 	UObject& operator= (const UObject& other) = delete;
 	UObject& operator= (UObject&& other) = delete;
 
-	template <typename T>
-	T GetPropertyValue(std::string prop_name) const;
+	// get, set value method
+	std::unordered_map<std::string, UProperty*>& GetProperties() { return properties_; }
+	template <typename T> T GetPropertyValue(const std::string& prop_name) const;
+	template <typename T> void SetPropertyValue(std::string prop_name, T value);
 
-	template <typename T>
-	void SetPropertyValue(std::string prop_name, T value);
+	// helper method
+	void SetObjectFlag(OBJECT_FLAG mark_enum) { flag_ = mark_enum | flag_; }
+	void RemoveObjectFlag(OBJECT_FLAG mark_enum) { flag_ = ~mark_enum & flag_; }
+	bool CheckObjectFlag(OBJECT_FLAG mark_enum) { return flag_ & mark_enum ? true : false; }
 
-	void SetCollectable(bool collectable = true) { collectable_ = collectable; }
-	bool IsCollectable() const { return collectable_; }
-
-	void MarkObject() { collectable_ = true; }
+	bool IsCollectable() { return CheckObjectFlag(OBJECT_FLAG::COLLECTABLE); }
+	bool IsRootObject() { return CheckObjectFlag(OBJECT_FLAG::ROOT); }
+	bool IsMarkedObject() { return CheckObjectFlag(OBJECT_FLAG::MARKED); }
+	bool IsPendingKill() { return CheckObjectFlag(OBJECT_FLAG::PENDING_KILL); }
 
 	void SetName(const std::string& name) { name_ = name; }
 	std::string GetName() const { return name_; }
-
-	std::unordered_map<std::string, UProperty*>& GetProperties() { return properties_; }
 
 private:
 	UProperty* GetProperty(const std::string& prop_name) const;
@@ -55,16 +62,17 @@ protected:
 
 private:
 	std::string name_;
-	bool collectable_;
+	int flag_;
 
 	std::unordered_map<std::string, UProperty*> properties_;
 	std::unordered_map<std::string, UFunction*> functions_;
 };
 
 template<typename T>
-inline T UObject::GetPropertyValue(std::string prop_name) const
+inline T UObject::GetPropertyValue(const std::string& prop_name) const
 {
 	UProperty* temp_prop = GetProperty(prop_name);
+
 	if (nullptr == temp_prop)
 	{
 		return T();
@@ -81,8 +89,9 @@ inline void UObject::SetPropertyValue(std::string prop_name, T value)
 	{
 		return;
 	}
-
-	if (prop_info->GetTypeHash() == typeid(T).hash_code())
+	
+	if (prop_info->GetTypeHash() == typeid(T).hash_code() ||
+		typeid(UObject*).hash_code() == typeid(T).hash_code())
 	{
 		*(static_cast<T*>(prop_info->GetAddress())) = value;
 	}

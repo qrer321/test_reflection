@@ -224,10 +224,13 @@ void Parser::GenerateHeaderFile(const std::string& class_name, const std::vector
 		"\n" +
 		"#ifdef UCLASS\n" +
 		"#undef UCLASS\n" +
+		"#define UCLASS()\n" +
 		"#endif\n\n" +
+		"#ifndef UCLASS\n" +
 		"#define UCLASS() \\\n" +
 		"\t\tstatic std::unordered_map<std::string, class UProperty*> reflection_properties; \\\n" +
 		"\t\tstatic std::unordered_map<std::string, class UFunction*> reflection_functions;\n" +
+		"#endif" +
 		"\n\n" +
 		"#ifdef GENERATED_BODY\n" +
 		"#undef GENERATED_BODY\n" +

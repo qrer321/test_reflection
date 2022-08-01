@@ -30,6 +30,8 @@ public:
 	void CollectSweepObject(UObject* have_to_be_sweep);
 
 	UObject* FindObjectBasedOnName(const std::string& object_name) const;
+
+	bool ObjectExistence(UObject* target_object);
 	std::set<UObject*> GetAllObject() const { return object_bundle_; }
 
 private:
@@ -42,7 +44,8 @@ private:
 	std::queue<UObject*> sweep_queue_;
 };
 
-template <typename T>
+template <typename T, 
+		  typename = std::enable_if_t<std::is_base_of<UObject, T>::value>>
 T* NewObject()
 {
 	UObject* new_object = new T();
@@ -51,7 +54,40 @@ T* NewObject()
 	return static_cast<T*>(new_object);
 }
 
-template<typename T>
+template <typename T,
+		  typename = std::enable_if_t<std::is_base_of<UObject, T>::value>>
 void AddToRoot(T* object)
 {
+	if (true == object->CheckObjectFlag(OBJECT_FLAG::MARKED))
+	{
+		return;
+	}
+
+	object->SetObjectFlag(OBJECT_FLAG::ROOT);
+}
+
+template <typename T,
+		  typename = std::enable_if_t<std::is_base_of<UObject, T>::value>>
+void SetPendingKill(T* object, bool all_reachable_object = false)
+{
+	object->SetObjectFlag(OBJECT_FLAG::PENDING_KILL);
+
+	// setting pendingkill all reachable object
+	if (true == all_reachable_object)
+	{
+		for (const auto& prop : object->GetProperties())
+		{
+			// identify objects is UObject
+			UObject* identify_object = object->GetPropertyValue<UObject*>(prop.first);
+			if (true == Reflection::GetInstance()->ObjectExistence(identify_object))
+			{
+				if (identify_object->CheckObjectFlag(OBJECT_FLAG::PENDING_KILL))
+				{
+					continue;
+				}
+
+				identify_object->SetObjectFlag(OBJECT_FLAG::PENDING_KILL);
+			}
+		}
+	}
 }

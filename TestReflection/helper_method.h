@@ -2,33 +2,83 @@
 
 // 객체 생성, 객체 프로퍼티 변경, GC 수행
 
-#include "SomeTestClass.h"
 #include "Reflection.h"
+#include "GarbageCollector.h"
+#include "SomeTestClass.h"
 
-void TypenameConverter()
+static std::string GetPropertyValue(UObject* object, const std::string& prop_name)
 {
-	// int
-	// SomeTestClass*
+	auto find_iter = object->GetProperties().find(prop_name);
+	std::string prop_type = find_iter->second->GetType();
+
+	if ("int" == prop_type)
+	{
+		return std::to_string(object->GetPropertyValue<int>(prop_name));
+	}
+
+	if ("SomeTestClass*" == prop_type)
+	{
+		SomeTestClass* target_object = object->GetPropertyValue<SomeTestClass*>(prop_name);
+		if (nullptr != target_object)
+		{
+			return target_object->GetName();
+		}
+		else
+		{
+			return "nullptr";
+		}
+	}
+
+	return std::string();
+}
+
+static void SetPropertyValue(UObject* object, const std::string& prop_name, const std::string& value)
+{
+	// should function be generated automatically..?
+	auto find_iter = object->GetProperties().find(prop_name);
+	if (find_iter == object->GetProperties().end())
+	{
+		std::cout << "잘못된 Property 명을 입력하였습니다..." << std::endl << std::endl;
+		return;
+	}
+
+	std::string prop_type = find_iter->second->GetType();
+
+	if ("int" == prop_type)
+	{
+		object->SetPropertyValue(prop_name, std::stoi(value));
+		return;
+	}
+
+	if ("SomeTestClass*" == prop_type)
+	{
+		UObject* other = Reflection::GetInstance()->FindObjectBasedOnName(value);
+		if (nullptr != other)
+		{
+			object->SetPropertyValue(prop_name, other);
+			return;
+		}
+	}
 }
 
 void CreateObject()
 {
 	
 	std::cout << "임의적인 클래스로 생성합니다." << std::endl;
-	std::cout << "객체 명 입력..." << std::endl;
+	std::cout << "객체 명 입력... : " << std::endl;
 
 	std::string object_name;
 	std::cin >> object_name;
 	std::cout << std::endl;
 
-	auto test_object = NewObject<SomeTestClass>();
+	SomeTestClass* test_object = NewObject<SomeTestClass>();
 	test_object->SetName(object_name);
 
 }
 
 void ActivateGarbageCollector()
 {
-	
+	GarbageCollector::GetInstance()->ActivateGarbageCollector();
 }
 
 void GetProperty(const std::string& object_name)
@@ -36,7 +86,7 @@ void GetProperty(const std::string& object_name)
 	UObject* object = Reflection::GetInstance()->FindObjectBasedOnName(object_name);
 	if (nullptr == object)
 	{
-		std::cout << "something wrong..." << std::endl;
+		std::cout << object_name << " 이라는 오브젝트는 존재하지 않습니다..." << std::endl << std::endl;
 		system("pause");
 		return;
 	}
@@ -46,7 +96,8 @@ void GetProperty(const std::string& object_name)
 
 	for (const auto& elem : object->GetProperties())
 	{
-		std::cout << elem.second->GetType() << " " << elem.first << " " << object->GetPropertyValue<int>(elem.first) << std::endl;
+		
+		std::cout << elem.second->GetType() << " " << elem.first << "\t" << GetPropertyValue(object, elem.first) << std::endl;
 	}
 
 	std::cout << std::endl << std::endl;
@@ -64,11 +115,41 @@ void GetAllProperty()
 
 void SetProperty()
 {
-	
+	system("cls");
+
+	while (true)
+	{
+		std::cout << "객체 명 입력 혹은 나가기(0)... : ";
+
+		std::string object_name;
+		std::cin >> object_name;
+		std::cout << std::endl;
+
+		if ("0" == object_name)
+		{
+			break;
+		}
+
+		GetProperty(object_name);
+		UObject* object = Reflection::GetInstance()->FindObjectBasedOnName(object_name);
+		
+		std::cout << "변경하려는 Property 명을 입력하세요 : ";
+		std::string property_name;
+		std::cin >> property_name;
+
+		// 해당 property의 타입이 포인터 형태인 경우 가리키려는 오브젝트 명을 입력...
+		std::cout << "값 입력 : ";
+		std::string value;
+		std::cin >> value;
+
+		SetPropertyValue(object, property_name, value);
+	}
 }
 
 void menu_output()
 {
+	bool break_console = false;
+
 	while (true)
 	{
 		std::string output_string;
@@ -76,7 +157,8 @@ void menu_output()
 
 		output_string = output_string +
 			"1. 객체 생성                    2. 모든 객체 정보 확인\n" +
-			"3. 프로퍼티 변경                4. GC 수행";
+			"3. 프로퍼티 변경                4. GC 수행\n" +
+			"5. 종료";
 		std::cout << output_string;
 		std::cout << std::endl << std::endl;
 
@@ -93,12 +175,23 @@ void menu_output()
 			SetProperty();
 			break;
 		case 4:
+			system("cls");
+			std::cout << "Activated Garbage Collector" << std::endl << std::endl;
 			ActivateGarbageCollector();
+			system("pause");
+			break;
+		case 5:
+			break_console = true;
 			break;
 		default:
 			break;
 		}
 
 		system("cls");
+
+		if (true == break_console)
+		{
+			break;
+		}
 	}
 }

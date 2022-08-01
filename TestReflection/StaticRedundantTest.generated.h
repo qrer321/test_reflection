@@ -5,12 +5,14 @@
 
 #ifdef UCLASS
 #undef UCLASS
+#define UCLASS()
 #endif
 
+#ifndef UCLASS
 #define UCLASS() \
-		static std::unordered_map<std::string, UProperty*> reflection_properties; \
-		static std::unordered_map<std::string, UFunction*> reflection_functions;
-
+		static std::unordered_map<std::string, class UProperty*> reflection_properties; \
+		static std::unordered_map<std::string, class UFunction*> reflection_functions;
+#endif
 
 #ifdef GENERATED_BODY
 #undef GENERATED_BODY

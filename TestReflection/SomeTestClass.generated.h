@@ -5,12 +5,14 @@
 
 #ifdef UCLASS
 #undef UCLASS
+#define UCLASS()
 #endif
 
+#ifndef UCLASS
 #define UCLASS() \
-		static std::unordered_map<std::string, UProperty*> reflection_properties; \
-		static std::unordered_map<std::string, UFunction*> reflection_functions;
-
+		static std::unordered_map<std::string, class UProperty*> reflection_properties; \
+		static std::unordered_map<std::string, class UFunction*> reflection_functions;
+#endif
 
 #ifdef GENERATED_BODY
 #undef GENERATED_BODY
@@ -22,9 +24,9 @@ private: \
 		{ \
 			reflection_properties = \
 			{ \
-				{"test_int_1", new UProperty("int", typeid(int).hash_code(), &test_int_1, sizeof(test_int_1))}, \
-				{"test_int_2", new UProperty("int", typeid(int).hash_code(), &test_int_2, sizeof(test_int_2))}, \
-				{"pointing_other_object", new UProperty("SomeTestClass*", typeid(SomeTestClass*).hash_code(), &pointing_other_object, sizeof(pointing_other_object))}, \
+				{"test_int_1", new UProperty("int", typeid(int).hash_code(), &test_int_1, sizeof(test_int_1)) }, \
+				{"test_int_2", new UProperty("int", typeid(int).hash_code(), &test_int_2, sizeof(test_int_2)) }, \
+				{"pointing_other_object", new UProperty("SomeTestClass*", typeid(SomeTestClass*).hash_code(), &pointing_other_object, sizeof(pointing_other_object)) }, \
 			}; \
  			\
 			reflection_functions = \

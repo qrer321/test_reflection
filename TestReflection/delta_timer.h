@@ -13,7 +13,7 @@ public:
 private:
 	std::chrono::time_point<std::chrono::system_clock> chrono_start;
 	std::chrono::time_point<std::chrono::system_clock> chrono_end;
-	std::chrono::duration<float, std::ratio<1, 1000>> chrono_delta;
+	std::chrono::duration<float, std::ratio<1, 10>> chrono_delta;
 };
 
 inline delta_timer::delta_timer()

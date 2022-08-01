@@ -1,6 +1,6 @@
 #include "Parser.h"
 
-#define DIRECTORY_PATH "G:\\krafton\\test_reflection\\TestReflection\\"
+#define DIRECTORY_PATH "C:\\test_workspace\\test_reflection\\TestReflection\\"
 
 int main()
 {

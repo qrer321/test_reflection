@@ -29,3 +29,24 @@ UObject* Reflection::FindObjectBasedOnName(const std::string& object_name) const
 
 	return nullptr;
 }
+
+bool Reflection::ObjectExistence(UObject* target_object)
+{
+	if (nullptr == target_object)
+	{
+		return false;
+	}
+
+	if (true == object_bundle_.empty())
+	{
+		return false;
+	}
+
+	auto find_iter = object_bundle_.find(target_object);
+	if (find_iter == object_bundle_.end())
+	{
+		return false;
+	}
+
+	return true;
+}
