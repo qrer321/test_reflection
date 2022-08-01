@@ -23,4 +23,9 @@ private:
 
 	UPROPERTY()
 	SomeTestClass* pointing_other_object;
+
+public:
+	void Test()
+	{
+	}
 };

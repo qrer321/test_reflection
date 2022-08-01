@@ -36,6 +36,7 @@ public:
 
 	// get, set value method
 	std::unordered_map<std::string, UProperty*>& GetProperties() { return properties_; }
+	std::unordered_map<std::string, UFunction*>& GetFunctions() { return functions_; }
 	template <typename T> T GetPropertyValue(const std::string& prop_name) const;
 	template <typename T> void SetPropertyValue(std::string prop_name, T value);
 
@@ -52,7 +53,6 @@ public:
 	void SetName(const std::string& name) { name_ = name; }
 	std::string GetName() const { return name_; }
 
-private:
 	UProperty* GetProperty(const std::string& prop_name) const;
 	UFunction* GetFunction(const std::string& func_name) const;
 

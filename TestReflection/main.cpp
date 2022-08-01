@@ -45,6 +45,11 @@ void TestFunction()
 	SomeTestClass* return_address_value = specific_1.GetPropertyValue<SomeTestClass*>("pointing_other_object");
 }
 
+int test_func_else(int a, int b)
+{
+	return a + b;
+}
+
 int main()
 {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -55,6 +60,19 @@ int main()
 	auto new_test_object_1 = NewObject<SomeTestClass>();
 	new_test_object_0->SetName("first_object");
 	new_test_object_1->SetName("second_object");
+
+	std::function<int(int, int)> test_function = test_func_else;
+
+	void* address_test = &test_func_else;
+
+	std::unordered_map<std::string, void*> address_map =
+	{
+		{ "test_func_0", address_test }
+	};
+
+	auto find_iter = address_map.find("test_func_0");
+	auto second = find_iter->second;
+	
 
 	menu_output();
 

@@ -61,9 +61,30 @@ static void SetPropertyValue(UObject* object, const std::string& prop_name, cons
 	}
 }
 
+void ParamFolds(std::vector<std::string>& output_params) { return; }
+
+template <typename T, typename... Types>
+void ParamFolds(std::vector<std::string>& output_params, const T& first_param, Types... other_params)
+{
+	output_params.push_back(std::to_string(first_param));
+	ParamFolds(output_params, other_params...);
+}
+
+template <typename T, typename... Types>
+void CallFunction(UObject* object, const std::string& func_name, Types... params)
+{
+	std::vector<std::string> type_vector;
+	ParamFolds(type_vector, params...);
+
+	UFunction* object_func = object->GetFunction(func_name);
+	if (nullptr != object_func)
+	{
+		object_func->CallFunction<T>(object, type_vector);
+	}
+}
+
 void CreateObject()
 {
-	
 	std::cout << "임의적인 클래스로 생성합니다." << std::endl;
 	std::cout << "객체 명 입력... : " << std::endl;
 
@@ -73,7 +94,6 @@ void CreateObject()
 
 	SomeTestClass* test_object = NewObject<SomeTestClass>();
 	test_object->SetName(object_name);
-
 }
 
 void ActivateGarbageCollector()

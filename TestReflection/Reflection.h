@@ -22,6 +22,7 @@ public:
 	Reflection(Reflection&& other) = delete;
 	Reflection& operator= (const Reflection& other) = delete;
 	Reflection& operator= (Reflection&& other) = delete;
+
 	void Destroy() { delete reflection_instance_; }
 
 	void Insert(UObject* object);

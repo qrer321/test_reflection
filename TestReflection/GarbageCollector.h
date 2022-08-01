@@ -38,5 +38,4 @@ private:
 	void SweepAllObject();
 
 	static GarbageCollector* gc_instance;
-	bool forced_clear;
 };
