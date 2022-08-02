@@ -2,6 +2,8 @@
 #include "UObject.h"
 #include "SomeTestClass.generated.h"
 
+static void ttt_func(int, int) {}
+
 UCLASS()
 class SomeTestClass : public UObject
 {
@@ -25,7 +27,10 @@ private:
 	SomeTestClass* pointing_other_object;
 
 public:
-	void Test()
+	SomeTestClass(int a)
 	{
+		UFunction* temp_func;
+		temp_func = GetFunction("test_function_0");
+		temp_func->ResigterFunction(ttt_func);
 	}
 };

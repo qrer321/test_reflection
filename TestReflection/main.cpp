@@ -30,51 +30,84 @@
 
 #include "helper_method.h"
 
+std::map<std::string, std::function<void(msgpack::Unpacker&)>> functions;
+std::any any_value;
 
-void TestFunction()
+template <typename... Args>
+std::vector<uint8_t> serialize(const std::string& func_name, Args&&... arguments)
 {
-	auto prop_address_test = &reflection_properties;
-	auto func_address_test = &reflection_functions;
-	SomeTestClass specific_1;
-	SomeTestClass specific_2;
+	using ArgsTuple = std::tuple<typename std::decay_t<std::remove_reference_t<Args>>...>;
+	//using ArgsTuple = std::tuple<typename std::decay_t<std::remove_reference_v<Args>>...>;
+	ArgsTuple tuple = std::make_tuple(arguments...);
 
-	specific_1.SetPropertyValue<int>("test_int_2", 99);
-	specific_1.SetPropertyValue<SomeTestClass*>("pointing_other_object", &specific_2);
+	msgpack::Packer packer{};
+	[&] <typename Tuple, std::size_t... I>(Tuple && tuple, std::index_sequence<I...>)
+	{
+		(packer(std::get<I>(tuple)), ...);
+	} (std::forward<ArgsTuple>(tuple), std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<ArgsTuple>>>{});
 
-	int return_int_value = specific_1.GetPropertyValue<int>("test_int_2");
-	SomeTestClass* return_address_value = specific_1.GetPropertyValue<SomeTestClass*>("pointing_other_object");
+	return packer.vector();
 }
 
-int test_func_else(int a, int b)
+template <typename R, typename... Args>
+void callProxy(std::function<R(Args...)>&& func, msgpack::Unpacker& unpacker)
 {
-	return a + b;
+	// 단순히 functions map에 registerFunction를 이용하여 함수를 등록하면
+	// 실제로는 다른 형태로의 map이 생성된다.
+	// -> std::map<std::string, std::function<double(int, double)>> / std::map<std::string, std::function<int(int, int)>>
+
+	// 이런 문제로 인해서 callProxy 함수를 사용한다.
+
+	using ArgsTuple = std::tuple<typename std::decay_t<std::remove_reference_t<Args>>...>;
+	ArgsTuple tuple;
+
+	R result = [&]<typename Tuple, std::size_t... I>(Tuple && tuple, std::index_sequence<I...>) -> R
+	{
+		(unpacker(std::get<I>(tuple)), ...);
+		return func(std::get<I>(std::forward<Tuple>(tuple))...);
+	} (std::forward<ArgsTuple>(tuple), std::make_index_sequence<std::tuple_size_v<ArgsTuple>>{});
+
+	any_value = result;
 }
+
+template <typename R, typename... Args>
+void registerFunction(const std::string& func_name, R(*function)(Args...))
+{
+	functions[func_name] = std::bind(&callProxy<R, Args...>, function, std::placeholders::_1);
+}
+
+int test_function(int a, int b) 
+{
+	return a + b; 
+}
+
+void test_function_2(int, int) {}
+
 
 int main()
 {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	//_CrtSetBreakAlloc(1196);
 
-
 	auto new_test_object_0 = NewObject<SomeTestClass>();
 	auto new_test_object_1 = NewObject<SomeTestClass>();
 	new_test_object_0->SetName("first_object");
 	new_test_object_1->SetName("second_object");
-
-	std::function<int(int, int)> test_function = test_func_else;
-
-	void* address_test = &test_func_else;
-
-	std::unordered_map<std::string, void*> address_map =
-	{
-		{ "test_func_0", address_test }
-	};
-
-	auto find_iter = address_map.find("test_func_0");
-	auto second = find_iter->second;
 	
+	//menu_output();
+	// 
+	// func는 바인딩된 사용자 함수가 있는 callProxy여야 합니다???
 
-	menu_output();
+	auto ret_vec = serialize("test_function", 1, 2);
+	registerFunction("test_function", test_function);
+
+	msgpack::Unpacker unpacker(&ret_vec[0], ret_vec.size());
+	auto func = functions["test_function"];
+
+	// func() 호출에서 return 값이 존재한다면 해당 값을 받아낼 방법???
+	func(unpacker);
+	int ret_test = std::any_cast<int>(any_value);
+
 
 	//delta_timer dt;
 	//float running_time = 0.f;
