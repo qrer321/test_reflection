@@ -39,11 +39,6 @@ private: \
 			SetFunctions(reflection_functions); \
 		} \
 public: \
-		SomeTestClass() \
-		{ \
-			AddReflectionInfo(); \
-		\
-		}
 
 
 #ifdef UPROPERTY

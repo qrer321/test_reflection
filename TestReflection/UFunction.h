@@ -33,7 +33,8 @@ public:
 	void CallFunction(Args... arguments);
 
 	template <typename ReturnType>
-	ReturnType GetReturnValue() const; // must know the type of function return.
+	typename std::enable_if_t<!std::is_void_v<ReturnType>>
+	GetReturnValue() const; // must know the type of function return.
 
 private:
 	template <typename... Args>
@@ -72,7 +73,9 @@ template<typename ReturnType, typename ClassType, typename ...Args>
 inline void UFunction::RegisterFunction(ReturnType(ClassType::*function)(Args...))
 {
 	// for member function
+	auto test = std::bind(&UFunction::BindFunction<ReturnType, Args...>, this, function, std::placeholders::_1);
 	function_ = std::bind(&UFunction::BindFunction<ReturnType, Args...>, this, function, std::placeholders::_1);
+	int a = 0;
 }
 
 template<typename ReturnType, typename ...Args>
@@ -181,7 +184,8 @@ inline bool UFunction::ArgumentsVerifyCorrect(Args ...arguments)
 }
 
 template<typename ReturnType>
-inline ReturnType UFunction::GetReturnValue() const
+inline typename std::enable_if_t<!std::is_void_v<ReturnType>>
+UFunction::GetReturnValue() const
 {
 	// return type check?
 	if (typeid(ReturnType).name() != function_return_type_)

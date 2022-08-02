@@ -2,8 +2,6 @@
 #include "UObject.h"
 #include "SomeTestClass.generated.h"
 
-static void ttt_func(int, int) {}
-
 UCLASS()
 class SomeTestClass : public UObject
 {
@@ -27,8 +25,10 @@ private:
 	SomeTestClass* pointing_other_object;
 
 public:
-	SomeTestClass(int a)
+	SomeTestClass()
 	{
+		AddReflectionInfo();
+
 		UFunction* temp_func;
 		temp_func = GetFunction("test_function_0");
 		temp_func->RegisterFunction(&SomeTestClass::test_function_0);
