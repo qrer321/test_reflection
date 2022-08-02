@@ -81,8 +81,7 @@ int test_function(int a, int b)
 	return a + b; 
 }
 
-void test_function_2(int, int) {}
-
+void test_function_2(int a, int b) { }
 
 int main()
 {
@@ -108,6 +107,8 @@ int main()
 	func(unpacker);
 	int ret_test = std::any_cast<int>(any_value);
 
+	UFunction* test_new_func = new UFunction();
+	test_new_func->RegisterFunction(test_function_2);
 
 	//delta_timer dt;
 	//float running_time = 0.f;

@@ -29,9 +29,9 @@ public:
 	}
 	virtual ~UObject();
 
-	UObject(const UObject& other) = delete;
+	UObject(const UObject& other) = default;
 	UObject(UObject&& other) = delete;
-	UObject& operator= (const UObject& other) = delete;
+	UObject& operator= (const UObject& other) = default;
 	UObject& operator= (UObject&& other) = delete;
 
 	// get, set value method

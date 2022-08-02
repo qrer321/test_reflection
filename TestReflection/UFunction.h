@@ -26,7 +26,9 @@ public:
 	const std::vector<std::string>& GetFunctionParams() const { return function_params_; }
 	
 	template <typename ReturnType, typename... Args>
-	void ResigterFunction(ReturnType(*function)(Args...));
+	void RegisterFunction(ReturnType(*function)(Args...));
+	template <typename ReturnType, typename ClassType, typename... Args>
+	void RegisterFunction(ReturnType(ClassType::*function)(Args...));
 	template <typename... Args>
 	void CallFunction(Args... arguments);
 
@@ -35,16 +37,23 @@ public:
 
 private:
 	template <typename... Args>
-	void SerializeFunction(Args&&... arguments);
-	template <typename ReturnType, typename... Args>
-	void BindFunction(std::function<ReturnType(Args...)>&& function, msgpack::Unpacker& unpacker);
-	template <typename... Args>
 	bool ArgumentsVerifyCorrect(Args... arguments);
+	template <typename... Args>
+	void SerializeFunction(Args&&... arguments);
+
+	template <typename ReturnType, typename... Args>
+	typename std::enable_if_t<!std::is_void_v<ReturnType>>
+	BindFunction(std::function<ReturnType(Args...)>&& function, msgpack::Unpacker& unpacker);
+	template <typename ReturnType, typename... Args>
+	typename std::enable_if_t<std::is_void_v<ReturnType>>
+	BindFunction(std::function<ReturnType(Args...)>&& function, msgpack::Unpacker& unpacker);
+
 
 	std::string function_return_type_;
 	std::vector<std::string> function_params_;
 
 	std::function<void(msgpack::Unpacker&)> function_;
+	std::map<std::string, std::function<void(msgpack::Unpacker&)>> functions_;
 	std::any function_return_;
 	std::vector<uint8_t> serialize_vector_;
 };
@@ -53,24 +62,49 @@ private:
 ///////////////////////////////////// Generate Function Base /////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename ReturnType, typename ...Args>
-inline void UFunction::ResigterFunction(ReturnType(*function)(Args...))
+inline void UFunction::RegisterFunction(ReturnType(*function)(Args...))
 {
-	function_ = std::bind(&BindFunction<ReturnType, Args...>, function, std::placeholders::_1);
+	// for non-member function
+	function_ = std::bind(&UFunction::BindFunction<ReturnType, Args...>, this, function, std::placeholders::_1);
+}
+
+template<typename ReturnType, typename ClassType, typename ...Args>
+inline void UFunction::RegisterFunction(ReturnType(ClassType::*function)(Args...))
+{
+	// for member function
+	function_ = std::bind(&UFunction::BindFunction<ReturnType, Args...>, this, function, std::placeholders::_1);
 }
 
 template<typename ReturnType, typename ...Args>
-inline void UFunction::BindFunction(std::function<ReturnType(Args...)>&& function, msgpack::Unpacker& unpacker)
+typename std::enable_if_t<!std::is_void_v<ReturnType>>
+inline UFunction::BindFunction(std::function<ReturnType(Args...)>&& function, msgpack::Unpacker& unpacker)
 {
+	// for non-void function
 	using ArgsTuple = std::tuple<typename std::decay_t<std::remove_reference_t<Args>>...>;
 	ArgsTuple tuple;
 
-	ReturnType result = [&unpacker] <typename Tuple, std::size_t... Index>(Tuple && tuple, std::index_sequence<Index...>) -> ReturnType
+	ReturnType result = [&] <typename Tuple, std::size_t... Index>(Tuple && tuple, std::index_sequence<Index...>) -> ReturnType
 	{
 		(unpacker(std::get<Index>(tuple)), ...);
-		return func(std::get<Index>(std::forward<Tuple>(tuple))...);
+		return function(std::get<Index>(std::forward<Tuple>(tuple))...);
 	} (std::forward<ArgsTuple>(tuple), std::make_index_sequence<std::tuple_size_v<ArgsTuple>>{});
 
-	function_return_ = std::move(result);
+	function_return_ = result;
+}
+
+template<typename ReturnType, typename ...Args>
+typename std::enable_if_t<std::is_void_v<ReturnType>>
+inline UFunction::BindFunction(std::function<ReturnType(Args...)>&& function, msgpack::Unpacker& unpacker)
+{
+	// for void function
+	using ArgsTuple = std::tuple<typename std::decay_t<std::remove_reference_t<Args>>...>;
+	ArgsTuple tuple;
+
+	[&] <typename Tuple, std::size_t... Index>(Tuple && tuple, std::index_sequence<Index...>)
+	{
+		(unpacker(std::get<Index>(tuple)), ...);
+		function(std::get<Index>(std::forward<Tuple>(tuple))...);
+	} (std::forward<ArgsTuple>(tuple), std::make_index_sequence<std::tuple_size_v<ArgsTuple>>{});
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////

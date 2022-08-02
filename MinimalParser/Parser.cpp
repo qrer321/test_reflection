@@ -275,7 +275,19 @@ void Parser::GenerateHeaderFile(const std::string& class_name, const std::vector
 		"public: \\\n" +
 		"\t\t" + class_name + "() \\\n" +
 		"\t\t{ \\\n" +
-		"\t\t\tAddReflectionInfo(); \\\n\t\t}" +
+		"\t\t\tAddReflectionInfo(); \\\n \t\t\\\n" +
+		"\t\t\t" + "UFunction* temp_func; \\\n";
+
+	for (const FunctionInfo& f_info : functions_info)
+	{
+		generated_string = generated_string +
+			"\t\t\ttemp_func = GetFunction(\"" + f_info.name + "\"); \\\n" +
+			"\t\t\ttemp_func->RegisterFunction(&" + class_name + "::" + f_info.name + ");\\\n";
+	}
+
+	generated_string = generated_string +
+		"\t\t\\\n" +
+		"\t\t}" +
 		"\n\n\n";
 
 	generated_string = generated_string +

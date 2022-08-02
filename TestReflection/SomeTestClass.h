@@ -31,6 +31,6 @@ public:
 	{
 		UFunction* temp_func;
 		temp_func = GetFunction("test_function_0");
-		temp_func->ResigterFunction(ttt_func);
+		temp_func->RegisterFunction(&SomeTestClass::test_function_0);
 	}
 };

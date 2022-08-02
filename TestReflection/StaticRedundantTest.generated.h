@@ -37,6 +37,9 @@ public: \
 		StaticRedundantTest() \
 		{ \
 			AddReflectionInfo(); \
+ 		\
+			UFunction* temp_func; \
+		\
 		}
 
 
