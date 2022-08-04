@@ -137,6 +137,7 @@
     <ClCompile Include="StaticRedundantTest.cpp" />
     <ClCompile Include="UField.cpp" />
     <ClCompile Include="UFunction.cpp" />
+    <ClCompile Include="UFunction_Temp.cpp" />
     <ClCompile Include="UObject.cpp" />
     <ClCompile Include="UProperty.cpp" />
   </ItemGroup>
@@ -151,6 +152,7 @@
     <ClInclude Include="StaticRedundantTest.h" />
     <ClInclude Include="UField.h" />
     <ClInclude Include="UFunction.h" />
+    <ClInclude Include="UFunction_Temp.h" />
     <ClInclude Include="UObject.h" />
     <ClInclude Include="UProperty.h" />
   </ItemGroup>

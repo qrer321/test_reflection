@@ -282,11 +282,10 @@ void Parser::GenerateHeaderFile(const std::string& class_name, const std::vector
 	{
 		generated_string = generated_string +
 			"\t\t\ttemp_func = GetFunction(\"" + f_info.name + "\"); \\\n" +
-			"\t\t\ttemp_func->RegisterFunction(&" + class_name + "::" + f_info.name + ");\\\n";
+			"\t\t\ttemp_func->RegisterFunction(this, &" + class_name + "::" + f_info.name + "); \\\n";
 	}
 
 	generated_string = generated_string +
-		"\t\t\\\n" +
 		"\t\t}" +
 		"\n\n\n";
 

@@ -39,7 +39,6 @@ public: \
 			AddReflectionInfo(); \
  		\
 			UFunction* temp_func; \
-		\
 		}
 
 

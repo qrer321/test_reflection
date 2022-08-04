@@ -30,6 +30,8 @@
 
 #include "helper_method.h"
 
+#include "UFunction_Temp.h"
+
 std::map<std::string, std::function<void(msgpack::Unpacker&)>> functions;
 std::any any_value;
 
@@ -83,6 +85,12 @@ int test_function(int a, int b)
 
 void test_function_2(int a, int b) { }
 
+class test_class
+{
+public:
+	void input_func(int a, int b) {  }
+};
+
 int main()
 {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -106,6 +114,27 @@ int main()
 	// func() 호출에서 return 값이 존재한다면 해당 값을 받아낼 방법???
 	func(unpacker);
 	int ret_test = std::any_cast<int>(any_value);
+
+	test_class* new_test_class = new test_class;
+	UFunction* funct = new UFunction();
+	//funct->RegisterFunction(new_test_class, &test_class::input_func);
+	funct->RegisterFunction(test_function);
+
+	//funct->CallFunction(1, 2);
+	//ret_test = funct->GetRetValue<int>();
+
+	//auto str = std::string{ "test" };
+	//auto d = UFunction_Temp<std::string::size_type()>{};
+	//d.bind<std::string, &std::string::size>(&str);
+	//int a = 0;
+
+	//int va = 0;
+	//auto ttt = UFunction_Temp<int(int, int)>{};
+	//ttt.bind<&test_function>();
+
+	//ttt.SerializeFunction(1, 1);
+
+
 
 
 	//delta_timer dt;

@@ -29,6 +29,9 @@
     <ClCompile Include="ObjectPool.cpp">
       <Filter>Tool</Filter>
     </ClCompile>
+    <ClCompile Include="UFunction_Temp.cpp">
+      <Filter>Object Struct</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="support">
@@ -80,6 +83,9 @@
     </ClInclude>
     <ClInclude Include="helper_method.h">
       <Filter>support</Filter>
+    </ClInclude>
+    <ClInclude Include="UFunction_Temp.h">
+      <Filter>Object Struct</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
