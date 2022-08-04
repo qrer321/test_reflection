@@ -58,14 +58,17 @@ static void SetPropertyValue(UObject* object, const std::string& prop_name, cons
 }
 
 void GetProperty(const std::string&);
-void GetAllProperty()
+void GetAllProperty(bool pause)
 {
 	for (const auto& elem : Reflection::GetInstance()->GetAllObject())
 	{
 		GetProperty(elem->GetName());
 	}
 
-	system("pause");
+	if (true == pause)
+	{
+		system("pause");
+	}
 }
 
 void GetProperty(const std::string& object_name)
@@ -93,6 +96,8 @@ void GetProperty(const std::string& object_name)
 void SetProperty()
 {
 	system("cls");
+
+	GetAllProperty(false);
 
 	while (true)
 	{

@@ -181,9 +181,9 @@ namespace msgpack {
 			}
 			else
 			{
-				//auto recursive_packer = Packer{};
-				//const_cast<T&>(value).pack(recursive_packer);
-				//pack_type(recursive_packer.vector());
+				auto recursive_packer = Packer{};
+				const_cast<T&>(value).pack(recursive_packer);
+				pack_type(recursive_packer.vector());
 			}
 		}
 
@@ -194,25 +194,25 @@ namespace msgpack {
 
 		template<class T>
 		void pack_array(const T& array) {
-			if (array.size() < 16) {
-				auto size_mask = uint8_t(0b10010000);
-				serialized_object.emplace_back(uint8_t(array.size() | size_mask));
-			}
-			else if (array.size() < std::numeric_limits<uint16_t>::max()) {
-				serialized_object.emplace_back(array16);
-				for (auto i = sizeof(uint16_t); i > 0; --i) {
-					serialized_object.emplace_back(uint8_t(array.size() >> (8U * (i - 1)) & 0xff));
-				}
-			}
-			else if (array.size() < std::numeric_limits<uint32_t>::max()) {
-				serialized_object.emplace_back(array32);
-				for (auto i = sizeof(uint32_t); i > 0; --i) {
-					serialized_object.emplace_back(uint8_t(array.size() >> (8U * (i - 1)) & 0xff));
-				}
-			}
-			else {
-				return; // Give up if string is too long
-			}
+			//if (array.size() < 16) {
+			//	auto size_mask = uint8_t(0b10010000);
+			//	serialized_object.emplace_back(uint8_t(array.size() | size_mask));
+			//}
+			//else if (array.size() < std::numeric_limits<uint16_t>::max()) {
+			//	serialized_object.emplace_back(array16);
+			//	for (auto i = sizeof(uint16_t); i > 0; --i) {
+			//		serialized_object.emplace_back(uint8_t(array.size() >> (8U * (i - 1)) & 0xff));
+			//	}
+			//}
+			//else if (array.size() < std::numeric_limits<uint32_t>::max()) {
+			//	serialized_object.emplace_back(array32);
+			//	for (auto i = sizeof(uint32_t); i > 0; --i) {
+			//		serialized_object.emplace_back(uint8_t(array.size() >> (8U * (i - 1)) & 0xff));
+			//	}
+			//}
+			//else {
+			//	return; // Give up if string is too long
+			//}
 			for (const auto& elem : array) {
 				pack_type(elem);
 			}

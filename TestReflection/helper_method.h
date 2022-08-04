@@ -64,7 +64,7 @@ void FunctionCall()
 	}
 
 	std::cout << std::endl;
-	std::cout << function_name << "'s Parameters ( ";
+	std::cout << function_name << "'s Parameters " << find_function->GetReturnType() << "( ";
 	std::vector<std::string> params = find_function->GetFunctionParams();
 	for (const auto& param : params)
 	{
@@ -74,12 +74,37 @@ void FunctionCall()
 
 	if (false == params.empty())
 	{
+		// 당장은 정수형 매개변수만이 가능함.
 		std::string input_params;
 		std::cout << "매개변수에 값을 입력하세요.(띄어쓰기로 구분합니다) : ";
 		std::cin.ignore();
 		std::getline(std::cin, input_params);
+		
+		std::vector<int> input_vector;
+		size_t sub_pos = 0;
+		while (true)
+		{
+			size_t blank_pos = input_params.find(' ', sub_pos);
+			if (std::string::npos == blank_pos)
+			{
+				size_t end_pos = input_params.length();
+				std::string end_string = input_params.substr(sub_pos, end_pos - sub_pos);
 
-		//find_function->CallFunction("1");
+				input_vector.push_back(std::stoi(end_string));
+				break;
+			}
+
+			std::string sub_string = input_params.substr(sub_pos, blank_pos - sub_pos);
+			sub_pos = blank_pos + 1;
+
+			input_vector.push_back(std::stoi(sub_string));
+		}
+	
+		find_function->CallFunction(input_vector);
+	}
+	else
+	{
+		find_function->CallFunction();
 	}
 
 	system("pause");
@@ -108,7 +133,7 @@ void menu_output()
 			CreateObject();
 			break;
 		case 2:
-			GetAllProperty();
+			GetAllProperty(true);
 			break;
 		case 3:
 			SetProperty();
