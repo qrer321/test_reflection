@@ -131,7 +131,6 @@
   <ItemGroup>
     <ClCompile Include="GarbageCollector.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ObjectPool.cpp" />
     <ClCompile Include="Reflection.cpp" />
     <ClCompile Include="SomeTestClass.cpp" />
     <ClCompile Include="StaticRedundantTest.cpp" />
@@ -146,7 +145,6 @@
     <ClInclude Include="GarbageCollector.h" />
     <ClInclude Include="global.h" />
     <ClInclude Include="helper_method.h" />
-    <ClInclude Include="ObjectPool.h" />
     <ClInclude Include="property_method.h" />
     <ClInclude Include="Reflection.h" />
     <ClInclude Include="SomeTestClass.h" />

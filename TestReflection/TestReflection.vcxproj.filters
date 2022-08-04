@@ -26,9 +26,6 @@
     <ClCompile Include="GarbageCollector.cpp">
       <Filter>Tool</Filter>
     </ClCompile>
-    <ClCompile Include="ObjectPool.cpp">
-      <Filter>Tool</Filter>
-    </ClCompile>
     <ClCompile Include="UFunction_Temp.cpp">
       <Filter>Object Struct</Filter>
     </ClCompile>
@@ -76,9 +73,6 @@
       <Filter>Reflection Test Class</Filter>
     </ClInclude>
     <ClInclude Include="GarbageCollector.h">
-      <Filter>Tool</Filter>
-    </ClInclude>
-    <ClInclude Include="ObjectPool.h">
       <Filter>Tool</Filter>
     </ClInclude>
     <ClInclude Include="helper_method.h">
