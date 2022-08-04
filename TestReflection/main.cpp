@@ -80,15 +80,16 @@ void registerFunction(const std::string& func_name, R(*function)(Args...))
 
 int test_function(int a, int b) 
 {
+	std::cout << "generic function call" << std::endl; 
 	return a + b; 
 }
 
-void test_function_2(int a, int b) { }
+void test_function_2() { std::cout << "non param function call" << std::endl; }
 
 class test_class
 {
 public:
-	void input_func(int a, int b) {  }
+	void input_func(int a, int b) { std::cout << "class func call" << std::endl; }
 };
 
 int main()
@@ -101,24 +102,30 @@ int main()
 	new_test_object_0->SetName("first_object");
 	new_test_object_1->SetName("second_object");
 	
-	//menu_output();
+
+
+	menu_output();
 	// 
 	// func는 바인딩된 사용자 함수가 있는 callProxy여야 합니다???
 
-	auto ret_vec = serialize("test_function", 1, 2);
-	registerFunction("test_function", test_function);
+	//auto ret_vec = serialize("test_function", 1, 2);
+	//registerFunction("test_function", test_function);
+	//
+	//msgpack::Unpacker unpacker(&ret_vec[0], ret_vec.size());
+	//auto func = functions["test_function"];
+	//
+	//// func() 호출에서 return 값이 존재한다면 해당 값을 받아낼 방법???
+	////func(unpacker);
+	////int ret_test = std::any_cast<int>(any_value);
+	//
+	//test_class* new_test_class = new test_class;
+	//
+	//UFunction* funct = new UFunction;
+	//funct->RegisterFunction(test_function);
+	//funct->CallFunction();
 
-	msgpack::Unpacker unpacker(&ret_vec[0], ret_vec.size());
-	auto func = functions["test_function"];
-
-	// func() 호출에서 return 값이 존재한다면 해당 값을 받아낼 방법???
-	func(unpacker);
-	int ret_test = std::any_cast<int>(any_value);
-
-	test_class* new_test_class = new test_class;
-	UFunction* funct = new UFunction();
-	//funct->RegisterFunction(new_test_class, &test_class::input_func);
-	funct->RegisterFunction(test_function);
+	
+	
 
 	//funct->CallFunction(1, 2);
 	//ret_test = funct->GetRetValue<int>();

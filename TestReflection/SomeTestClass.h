@@ -11,13 +11,16 @@ public:
 	~SomeTestClass() override = default;
 
 	UFUNCTION()
-		int test_function_0(int variable_left, int variable_right)
+	int test_function_0(int variable_left, int variable_right)
 	{
-		std::cout << "call" << std::endl; 
+		std::cout << "two param / int return member function call" << std::endl; 
 		return variable_left + variable_right; 
 	}
 	UFUNCTION()
-	void test_function_1() {}
+	void test_function_1() 
+	{
+		std::cout << "zero param / void return member function call" << std::endl;
+	}
 
 private:
 	UPROPERTY()

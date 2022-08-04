@@ -87,5 +87,8 @@
     <ClInclude Include="UFunction_Temp.h">
       <Filter>Object Struct</Filter>
     </ClInclude>
+    <ClInclude Include="property_method.h">
+      <Filter>support</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

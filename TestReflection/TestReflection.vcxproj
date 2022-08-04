@@ -147,6 +147,7 @@
     <ClInclude Include="global.h" />
     <ClInclude Include="helper_method.h" />
     <ClInclude Include="ObjectPool.h" />
+    <ClInclude Include="property_method.h" />
     <ClInclude Include="Reflection.h" />
     <ClInclude Include="SomeTestClass.h" />
     <ClInclude Include="StaticRedundantTest.h" />

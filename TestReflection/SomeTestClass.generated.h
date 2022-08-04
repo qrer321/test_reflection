@@ -31,7 +31,7 @@ private: \
  			\
 			reflection_functions = \
 			{ \
-				{"test_function_0", new UFunction("	int", { "int", "int", })}, \
+				{"test_function_0", new UFunction("int", { "int", "int", })}, \
 				{"test_function_1", new UFunction("void", { })}, \
 			}; \
  			\
