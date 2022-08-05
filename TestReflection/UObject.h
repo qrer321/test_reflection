@@ -19,6 +19,13 @@ enum OBJECT_FLAG
 	MARKED = 0x01 << 3,
 };
 
+enum NetRole
+{
+	ROLE_Authority,
+	ROLE_SimulatedProxy,
+	ROLE_AutonomousProxy, 
+};
+
 class UObject
 {
 public:
@@ -50,6 +57,9 @@ public:
 	bool IsMarkedObject() { return CheckObjectFlag(OBJECT_FLAG::MARKED); }
 	bool IsPendingKill() { return CheckObjectFlag(OBJECT_FLAG::PENDING_KILL); }
 
+	void SetOwnerSession(const std::string& session) { owner_session_ = session; }
+	std::string GetOwnerSession() const { return owner_session_; }
+
 	void SetName(const std::string& name) { name_ = name; }
 	std::string GetName() const { return name_; }
 
@@ -61,6 +71,7 @@ protected:
 	void SetFunctions(const std::unordered_map<std::string, UFunction*>& functions) { functions_ = functions; }
 
 private:
+	std::string owner_session_;
 	std::string name_;
 	int flag_;
 

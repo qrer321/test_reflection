@@ -84,5 +84,8 @@
     <ClInclude Include="reflection_method.h">
       <Filter>support</Filter>
     </ClInclude>
+    <ClInclude Include="network_method.h">
+      <Filter>support</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

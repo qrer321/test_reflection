@@ -21,10 +21,9 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{1dc15435-22d3-42da-8e1d-8dd2c412d643}</ProjectGuid>
-    <RootNamespace>TestReflection</RootNamespace>
+    <ProjectGuid>{f9e9869b-2d96-4189-aa09-eab84f108910}</ProjectGuid>
+    <RootNamespace>TestServerApp</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>TestReflection</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -41,7 +40,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -71,6 +70,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LibraryPath>$(SolutionDir)x64\Debug\;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -129,32 +131,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="GarbageCollector.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Reflection.cpp" />
-    <ClCompile Include="SomeTestClass.cpp" />
-    <ClCompile Include="StaticRedundantTest.cpp" />
-    <ClCompile Include="UField.cpp" />
-    <ClCompile Include="UFunction.cpp" />
-    <ClCompile Include="UFunction_Temp.cpp" />
-    <ClCompile Include="UObject.cpp" />
-    <ClCompile Include="UProperty.cpp" />
+    <ClCompile Include="Server.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="delta_timer.h" />
-    <ClInclude Include="GarbageCollector.h" />
     <ClInclude Include="global.h" />
-    <ClInclude Include="helper_method.h" />
-    <ClInclude Include="network_method.h" />
-    <ClInclude Include="reflection_method.h" />
-    <ClInclude Include="Reflection.h" />
-    <ClInclude Include="SomeTestClass.h" />
-    <ClInclude Include="StaticRedundantTest.h" />
-    <ClInclude Include="UField.h" />
-    <ClInclude Include="UFunction.h" />
-    <ClInclude Include="UFunction_Temp.h" />
-    <ClInclude Include="UObject.h" />
-    <ClInclude Include="UProperty.h" />
+    <ClInclude Include="helper_method_for_server.h" />
+    <ClInclude Include="ParseCommand.h" />
+    <ClInclude Include="Server.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

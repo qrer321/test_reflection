@@ -24,6 +24,8 @@ public:
 
 	~UFunction() = default;
 
+	template <typename ReturnType>
+	auto GetReturnValue() const; // must know the type of function return.
 	const std::string& GetReturnType() const { return function_return_type_; }
 	const std::vector<std::string>& GetFunctionParams() const { return function_params_; }
 	
@@ -33,9 +35,6 @@ public:
 	void RegisterFunction(ClassType* instance, ReturnType(ClassType::*function)(Args...));
 	template <typename... Args>
 	void CallFunction(Args... arguments);
-
-	template <typename ReturnType>
-	auto GetReturnValue() const; // must know the type of function return.
 
 private:
 	template <typename... Args>

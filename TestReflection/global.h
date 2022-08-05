@@ -14,21 +14,26 @@
 #include <cassert>
 #include "msgpack/msgpack.hpp"
 
+#include <WinSock2.h>
+#include <Windows.h>
+#include <WS2tcpip.h>
+#include <thread>
+#include <mutex>
 
-using type_info_ref = std::reference_wrapper<const std::type_info>;
-struct hasher
+#pragma comment(lib, "ws2_32")
+
+enum RPC_ROLE
 {
-    std::size_t operator()(type_info_ref code) const
-    {
-        return code.get().hash_code();
-    }
+	RPC_SERVER,
+	RPC_CLIENT,
 };
 
-struct equal_to
+enum RPC_CODE
 {
-	bool operator() (type_info_ref lhs, type_info_ref rhs) const
-	{
-		return lhs.get() == rhs.get();
-	}
+	RPC_SUCCESS,
+	RPC_BIND_FUNCTION_ERR,
+	RPC_TIMEOUT,
 };
 
+static RPC_ROLE network_role = RPC_SERVER;
+static RPC_CODE network_code = RPC_SUCCESS;
