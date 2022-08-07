@@ -27,7 +27,6 @@ public:
 
 	Parser(const Parser& other) = delete;
 	Parser(Parser&& other) = delete;
-
 	Parser operator=(const Parser& other) = delete;
 	Parser operator=(Parser&& other) = delete;
 

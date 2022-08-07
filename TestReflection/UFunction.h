@@ -5,24 +5,19 @@ class UFunction
 {
 public:
 	UFunction()
-		: function_return_type_()
-		, function_params_()
-		, serialize_vector_()
-	{
-	}
+	{}
 	UFunction(std::string return_type, std::vector<std::string> params)
 		: function_return_type_(std::move(return_type))
 		, function_params_(std::move(params))
 		, serialize_vector_()
-	{
-	}
+	{}
+	~UFunction() = default;
 
 	UFunction(const UFunction& other) = delete;
 	UFunction(UFunction&& other) = delete;
 	UFunction& operator= (const UFunction& other) = delete;
 	UFunction& operator= (UFunction&& other) = delete;
 
-	~UFunction() = default;
 
 	template <typename ReturnType>
 	auto GetReturnValue() const; // must know the type of function return.
@@ -56,11 +51,11 @@ private:
 ///////////////////////////////////// Generate Function Base /////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename ReturnType, typename ...Args>
-inline void UFunction::RegisterFunction(ReturnType(*function)(Args...))
+void UFunction::RegisterFunction(ReturnType(*function)(Args...))
 {
 	// for non-member function
-	//function_ = std::bind(&UFunction::BindFunction<ReturnType, Args...>, this, function, std::placeholders::_1);
-
+	// function copied
+	// args comes from tuple
 	std::function<ReturnType(Args...)> generic_function = [function](auto&&... args) -> ReturnType
 	{
 		return (*function)(args...);
@@ -70,11 +65,11 @@ inline void UFunction::RegisterFunction(ReturnType(*function)(Args...))
 }
 
 template<typename ReturnType, class ClassType, typename ...Args>
-inline void UFunction::RegisterFunction(ClassType* instance, ReturnType(ClassType::*function)(Args...))
+void UFunction::RegisterFunction(ClassType* instance, ReturnType(ClassType::*function)(Args...))
 {
 	// for member function
-	//function_ = std::bind(&UFunction::BindFunction<ReturnType, Args...>, this, function, std::placeholders::_1);
-
+	// instance, function copied
+	// args comes from tuple
 	std::function<ReturnType(Args...)> class_function = [instance, function](auto&&... args) -> ReturnType
 	{
 		return (instance->*function)(args...);
@@ -84,19 +79,21 @@ inline void UFunction::RegisterFunction(ClassType* instance, ReturnType(ClassTyp
 }
 
 template<typename ReturnType, typename ...Args>
-inline void UFunction::BindFunction(std::function<ReturnType(Args...)> function)
+void UFunction::BindFunction(std::function<ReturnType(Args...)> function)
 {
 	function_ = [function, this](msgpack::Unpacker& unpacker)
 	{
+		// decay_t -> remove ref, const, volatile from Args
 		using ArgsTuple = std::tuple<std::decay_t<Args>...>;
 		ArgsTuple arguments;
 
 		auto bind_function = [&] <typename Tuple, std::size_t...Index>(Tuple && tuple, std::index_sequence<Index...>) -> ReturnType
 		{
 			(unpacker(std::get<Index>(tuple)), ...);
-			return function(std::get<Index>(std::forward<Tuple>(tuple))...);
+			return function(std::get<Index>(std::move(tuple))...);
 		};
 
+		// to compile time, replace enable if
 		if constexpr (false == std::is_void_v<ReturnType>)
 		{
 			// for non-void function
@@ -118,7 +115,7 @@ inline void UFunction::BindFunction(std::function<ReturnType(Args...)> function)
 ///////////////////////////////////////// Function Call //////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename ...Args>
-inline void UFunction::CallFunction(Args ...arguments)
+void UFunction::CallFunction(Args ...arguments)
 {
 	if (nullptr == this)
 	{
@@ -135,7 +132,7 @@ inline void UFunction::CallFunction(Args ...arguments)
 	msgpack::Unpacker unpacker;
 	if (false == serialize_vector_.empty())
 	{
-		// Exist Function Parameters;
+		// exist function params
 		unpacker = msgpack::Unpacker(serialize_vector_.data(), serialize_vector_.size() * sizeof(uint8_t));
 	}
 	
@@ -143,16 +140,16 @@ inline void UFunction::CallFunction(Args ...arguments)
 }
 
 template <typename... Args>
-inline void UFunction::SerializeFunction(Args&&... arguments)
+void UFunction::SerializeFunction(Args&&... arguments)
 {
-	using ArgsTuple = std::tuple<typename std::decay_t<std::remove_reference_t<Args>>...>;
-	ArgsTuple tuple = std::make_tuple(arguments...);
+	using ArgsTuple = std::tuple<std::decay_t<Args>...>;
+	ArgsTuple arg_tuple = std::make_tuple(arguments...);
 
 	msgpack::Packer packer = {};
 	[&packer] <typename Tuple, std::size_t... Index>(Tuple && tuple, std::index_sequence<Index...>)
 	{
 		(packer(std::get<Index>(tuple)), ...);
-	} (std::forward<ArgsTuple>(tuple), std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<ArgsTuple>>>{});
+	} (std::forward<ArgsTuple>(arg_tuple), std::make_index_sequence<std::tuple_size_v<ArgsTuple>>{});
 
 	serialize_vector_ = packer.vector();
 }
@@ -161,32 +158,18 @@ inline void UFunction::SerializeFunction(Args&&... arguments)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename ...Args>
-inline bool UFunction::ArgumentsVerifyCorrect(Args... arguments)
+bool UFunction::ArgumentsVerifyCorrect(Args... arguments)
 {
-	using ArgsTuple = std::tuple<typename std::decay_t<std::remove_reference_t<Args>>...>;
+	using ArgsTuple = std::tuple<std::decay_t<Args>...>;
 	ArgsTuple args = std::make_tuple(arguments...);;
 
-	//size_t tuple_size = std::tuple_size_v<ArgsTuple>;
-	//if (function_params_.size() != tuple_size)
-	//{
-	//	return false;
-	//}
-
-	// 재귀 람다 구조 너무 어렵고;
-	// 
-	//std::function<void(ArgsTuple, std::index_sequence<>)> bind_function;
-	//bind_function = [&] <typename Tuple, std::size_t...Index>(Tuple && tuple, std::index_sequence<Index...>)
-	//{
-	//	//return 
-	//};
-	//
-	//bind_function(std::forward<ArgsTuple>(args), std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<ArgsTuple>>>{});
+	// recursive lambda..?
 
 	return true;
 }
 
 template<typename ReturnType>
-inline auto UFunction::GetReturnValue() const
+auto UFunction::GetReturnValue() const
 {
 	if constexpr (false == std::is_void_v<ReturnType>)
 	{

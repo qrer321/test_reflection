@@ -15,37 +15,45 @@ Server::~Server()
 	}
 	gc_thread_.join();
 
-	Reflection::GetInstance();
-	GarbageCollector::GetInstance();
+	GarbageCollector::GetInstance()->Destroy();
+	Reflection::GetInstance()->Destroy();
 }
 
 void Server::IocpThreadFunction()
 {
 	while (true)
 	{
+		RecvOverlapped* data = {};
 		DWORD number_of_bytes_transferred;
 		ULONG_PTR completion_key;
 		LPOVERLAPPED overlapped;
 		GetQueuedCompletionStatus(handle_, &number_of_bytes_transferred, &completion_key, &overlapped, INFINITE);
 
-		RecvOverlapped* recv_data = reinterpret_cast<RecvOverlapped*>(completion_key);
+		if (0 == number_of_bytes_transferred)
+		{
+			std::cout << "force disconnected" << std::endl;
+			continue;
+		}
 
-		ToHelperMethod(this, recv_data);
+		data = reinterpret_cast<RecvOverlapped*>(completion_key);
+
+		ToHelperMethod(this, data);
 
 		if (SOCKET_ERROR ==
-			WSARecv(recv_data->socket_, &recv_data->buf_, 1, &recv_data->number_of_bytes_recvd_, &recv_data->flags_, &recv_data->overlapped_, nullptr))
+				WSARecv(data->socket_, &data->buf_, 1, &data->number_of_bytes_recvd_,
+				&data->flags_, &data->overlapped_, nullptr))
 		{
 			int error = static_cast<int>(GetLastError());
 			if (WSAECONNRESET == error)
 			{
 				std::cout << "disconnected" << std::endl;
-				return;
+				continue;
 			}
 
 			if (WSA_IO_PENDING != error)
 			{
 				std::cout << "some other error occurred " << error << std::endl;
-				return;
+				continue;
 			}
 		}
 	}

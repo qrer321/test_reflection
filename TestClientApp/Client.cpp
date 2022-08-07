@@ -9,6 +9,8 @@ Client::Client()
 
 Client::~Client()
 {
+	GarbageCollector::GetInstance()->Destroy();
+	Reflection::GetInstance()->Destroy();
 }
 
 bool g_check = true;
@@ -22,10 +24,10 @@ void Client::RecvFunction()
 			break;
 		}
 
-		char buffer[1024] = {};
-		recv(session_socket_, buffer, sizeof(buffer), 0);
+		char recv_buffer[1024] = {};
+		recv(session_socket_, recv_buffer, sizeof(recv_buffer), 0);
 
-		std::string recv_string = buffer;
+		std::string recv_string = recv_buffer;
 		ToHelperMethod(recv_string);
 	}
 }

@@ -1,6 +1,5 @@
 #pragma once
 #include "global.h"
-#include "UField.h"
 #include "UProperty.h"
 #include "UFunction.h"
 

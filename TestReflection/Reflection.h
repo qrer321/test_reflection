@@ -33,7 +33,7 @@ public:
 	UObject* FindObjectBasedOnName(const std::string& object_name) const;
 
 	bool ObjectExistence(UObject* target_object);
-	std::set<UObject*> GetAllObject() const { return object_bundle_; }
+	const std::set<UObject*>& GetAllObject() const { return object_bundle_; }
 
 private:
 	Reflection() = default;
@@ -59,7 +59,7 @@ template <typename T,
 		  typename = std::enable_if_t<std::is_base_of_v<UObject, T>>>
 void AddToRoot(T* object)
 {
-	if (true == object->CheckObjectFlag(OBJECT_FLAG::MARKED))
+	if (true == object->CheckObjectFlag(OBJECT_FLAG::ROOT))
 	{
 		return;
 	}

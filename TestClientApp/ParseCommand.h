@@ -2,9 +2,9 @@
 #include "global.h"
 
 inline bool ParseFunctionCall(const std::string& recv_string,
-	std::string& target, std::string& object_name,
-	std::string& function_name, std::string& input_params,
-	UObject*& find_object, UFunction*& find_function)
+							  std::string& target, std::string& object_name,
+							  std::string& function_name, std::string& input_params,
+							  UObject*& find_object, UFunction*& find_function)
 {
 	const size_t name_pos = recv_string.find(':') + 2;
 	size_t end_pos = recv_string.find('\\');

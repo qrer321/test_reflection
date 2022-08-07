@@ -130,13 +130,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="GarbageCollector.cpp" />
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="Reflection.cpp" />
     <ClCompile Include="SomeTestClass.cpp" />
-    <ClCompile Include="StaticRedundantTest.cpp" />
-    <ClCompile Include="UField.cpp" />
     <ClCompile Include="UFunction.cpp" />
-    <ClCompile Include="UFunction_Temp.cpp" />
     <ClCompile Include="UObject.cpp" />
     <ClCompile Include="UProperty.cpp" />
   </ItemGroup>
@@ -144,15 +140,9 @@
     <ClInclude Include="delta_timer.h" />
     <ClInclude Include="GarbageCollector.h" />
     <ClInclude Include="global.h" />
-    <ClInclude Include="helper_method.h" />
-    <ClInclude Include="network_method.h" />
-    <ClInclude Include="reflection_method.h" />
     <ClInclude Include="Reflection.h" />
     <ClInclude Include="SomeTestClass.h" />
-    <ClInclude Include="StaticRedundantTest.h" />
-    <ClInclude Include="UField.h" />
     <ClInclude Include="UFunction.h" />
-    <ClInclude Include="UFunction_Temp.h" />
     <ClInclude Include="UObject.h" />
     <ClInclude Include="UProperty.h" />
   </ItemGroup>

@@ -1,14 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="Reflection.cpp">
       <Filter>Tool</Filter>
     </ClCompile>
     <ClCompile Include="UObject.cpp">
-      <Filter>Object Struct</Filter>
-    </ClCompile>
-    <ClCompile Include="UField.cpp">
       <Filter>Object Struct</Filter>
     </ClCompile>
     <ClCompile Include="UFunction.cpp">
@@ -20,14 +16,8 @@
     <ClCompile Include="SomeTestClass.cpp">
       <Filter>Reflection Test Class</Filter>
     </ClCompile>
-    <ClCompile Include="StaticRedundantTest.cpp">
-      <Filter>Reflection Test Class</Filter>
-    </ClCompile>
     <ClCompile Include="GarbageCollector.cpp">
       <Filter>Tool</Filter>
-    </ClCompile>
-    <ClCompile Include="UFunction_Temp.cpp">
-      <Filter>Object Struct</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -54,9 +44,6 @@
     <ClInclude Include="UObject.h">
       <Filter>Object Struct</Filter>
     </ClInclude>
-    <ClInclude Include="UField.h">
-      <Filter>Object Struct</Filter>
-    </ClInclude>
     <ClInclude Include="UFunction.h">
       <Filter>Object Struct</Filter>
     </ClInclude>
@@ -69,23 +56,8 @@
     <ClInclude Include="delta_timer.h">
       <Filter>support</Filter>
     </ClInclude>
-    <ClInclude Include="StaticRedundantTest.h">
-      <Filter>Reflection Test Class</Filter>
-    </ClInclude>
     <ClInclude Include="GarbageCollector.h">
       <Filter>Tool</Filter>
-    </ClInclude>
-    <ClInclude Include="helper_method.h">
-      <Filter>support</Filter>
-    </ClInclude>
-    <ClInclude Include="UFunction_Temp.h">
-      <Filter>Object Struct</Filter>
-    </ClInclude>
-    <ClInclude Include="reflection_method.h">
-      <Filter>support</Filter>
-    </ClInclude>
-    <ClInclude Include="network_method.h">
-      <Filter>support</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
