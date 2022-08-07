@@ -46,7 +46,7 @@ private:
 };
 
 template <typename T, 
-		  typename = std::enable_if_t<std::is_base_of<UObject, T>::value>>
+		  typename = std::enable_if_t<std::is_base_of_v<UObject, T>>>
 T* NewObject()
 {
 	UObject* new_object = new T();
@@ -56,7 +56,7 @@ T* NewObject()
 }
 
 template <typename T,
-		  typename = std::enable_if_t<std::is_base_of<UObject, T>::value>>
+		  typename = std::enable_if_t<std::is_base_of_v<UObject, T>>>
 void AddToRoot(T* object)
 {
 	if (true == object->CheckObjectFlag(OBJECT_FLAG::MARKED))
@@ -68,12 +68,12 @@ void AddToRoot(T* object)
 }
 
 template <typename T,
-		  typename = std::enable_if_t<std::is_base_of<UObject, T>::value>>
+		  typename = std::enable_if_t<std::is_base_of_v<UObject, T>>>
 void SetPendingKill(T* object, bool all_reachable_object = false)
 {
 	object->SetObjectFlag(OBJECT_FLAG::PENDING_KILL);
 
-	// setting pendingkill all reachable object
+	// setting pending kill all reachable object
 	if (true == all_reachable_object)
 	{
 		for (const auto& prop : object->GetProperties())

@@ -1,5 +1,6 @@
 #pragma once
-#include "..\TestReflection\global.h"
+#include "../TestReflection/global.h"
+#include "../TestReflection/delta_timer.h"
 
 struct RecvOverlapped
 {
@@ -33,16 +34,20 @@ public:
 
 	void ServerRun();
 
-	std::set<SOCKET> GetClientSessions() const { return client_sessions_; }
+	std::set<SOCKET> client_sessions_;
+	const std::set<SOCKET>& GetClientSessions() const { return client_sessions_; }
 
-public:
+private:
 	void IocpThreadFunction();
+	void GCFunction();
 	void ServerInitialize();
 
 	HANDLE handle_;
-	std::mutex server_lock_;
-	std::set<SOCKET> client_sessions_;
-	std::vector<std::shared_ptr<std::thread>> thread_list_;
-
 	SOCKET accept_socket_;
+	std::mutex server_lock_;
+	std::vector<std::shared_ptr<std::thread>> thread_list_;
+	std::thread gc_thread_;
+
+	delta_timer dc_;
+	float		dc_time_;
 };

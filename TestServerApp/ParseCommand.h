@@ -5,8 +5,8 @@ inline bool ParsePropertyCall(const std::string& recv_string,
 							  std::string& object_name, std::string& property_name,
 							  std::string& value, UObject*& find_object)
 {
-	size_t name_pos = recv_string.find(":") + 2;
-	size_t end_pos = recv_string.find("\\");
+	size_t name_pos = recv_string.find(':') + 2;
+	size_t end_pos = recv_string.find('\\');
 	object_name = recv_string.substr(name_pos, end_pos - name_pos);
 
 	find_object = Reflection::GetInstance()->FindObjectBasedOnName(object_name);
@@ -14,13 +14,12 @@ inline bool ParsePropertyCall(const std::string& recv_string,
 	{
 		std::cout << "object does not exist" << std::endl;
 
-		string_copy("property setting denied...");
-		send(recv_data->socket_, buffer, static_cast<int>(buf_size), 0);
+		copy_and_send("property setting denied...", recv_data->socket_);
 		return false;
 	}
 
 	size_t temp_pos = end_pos + 1;
-	end_pos = recv_string.find("\\", temp_pos);
+	end_pos = recv_string.find('\\', temp_pos);
 	property_name = recv_string.substr(temp_pos, end_pos - temp_pos);
 	value = recv_string.substr(end_pos + 1, recv_string.size() - (end_pos + 1));
 
@@ -32,12 +31,12 @@ inline bool ParseFunctionCall(const std::string& recv_string,
 							  std::string& function_name, std::string& input_params,
 							  UObject*& find_object, UFunction*& find_function)
 {
-	size_t name_pos = recv_string.find(":") + 2;
-	size_t end_pos = recv_string.find("\\");
+	size_t name_pos = recv_string.find(':') + 2;
+	size_t end_pos = recv_string.find('\\');
 	target = recv_string.substr(name_pos, end_pos - name_pos);
 
 	size_t temp_pos = end_pos + 1;
-	end_pos = recv_string.find("\\", temp_pos);
+	end_pos = recv_string.find('\\', temp_pos);
 	object_name = recv_string.substr(temp_pos, end_pos - temp_pos);
 
 	find_object = Reflection::GetInstance()->FindObjectBasedOnName(object_name);
@@ -45,13 +44,12 @@ inline bool ParseFunctionCall(const std::string& recv_string,
 	{
 		std::cout << "object does not exist" << std::endl;
 
-		string_copy("function call denied...");
-		send(recv_data->socket_, buffer, static_cast<int>(buf_size), 0);
+		copy_and_send("function call denied...", recv_data->socket_);
 		return false;
 	}
 
 	temp_pos = end_pos + 1;
-	end_pos = recv_string.find("\\", temp_pos);
+	end_pos = recv_string.find('\\', temp_pos);
 	function_name = recv_string.substr(temp_pos, end_pos - temp_pos);
 	input_params = recv_string.substr(end_pos + 1, recv_string.size() - (end_pos + 1));
 
@@ -60,8 +58,7 @@ inline bool ParseFunctionCall(const std::string& recv_string,
 	{
 		std::cout << "function does not exist" << std::endl;
 
-		string_copy("function call denied...");
-		send(recv_data->socket_, buffer, static_cast<int>(buf_size), 0);
+		copy_and_send("function call denied...", recv_data->socket_);
 		return false;
 	}
 
@@ -90,19 +87,36 @@ inline void ParseParams(const std::string& input_params, std::vector<int>& input
 	}
 }
 
-inline void ResendCommand(const std::string& command, Resend_Command type)
+inline bool ParseDestroyCall(const std::string& recv_string, UObject*& find_object)
 {
-	if (Resend_Command::OTHER_CLIENT == type)
+	const size_t name_pos = recv_string.find(':') + 2;
+	const size_t end_pos = recv_string.find('\\');
+	const std::string object_name = recv_string.substr(name_pos, end_pos - name_pos);
+
+	find_object = Reflection::GetInstance()->FindObjectBasedOnName(object_name);
+	if (nullptr == find_object)
+	{
+		std::cout << "object does not exist" << std::endl;
+
+		copy_and_send("destroy call denied...", recv_data->socket_);
+		return false;
+	}
+
+	return true;
+}
+
+inline void ResendCommand(const std::string& command, RPC_TYPE type)
+{
+	if (RPC_TYPE::ALL_CLIENT == type)
 	{
 		lock.lock();
 		for (const auto& session : server_instance->GetClientSessions())
 		{
-			string_copy(command);
-			send(session, buffer, static_cast<int>(buf_size), 0);
+			copy_and_send(command, session);
 		}
 		lock.unlock();
 	}
-	else if (Resend_Command::OTHER_CLIENT_NOT_ME == type)
+	else if (RPC_TYPE::OTHER_CLIENT_NOT_ME == type)
 	{
 		lock.lock();
 		for (const auto& session : server_instance->GetClientSessions())
@@ -112,8 +126,7 @@ inline void ResendCommand(const std::string& command, Resend_Command type)
 				continue;
 			}
 
-			string_copy(command);
-			send(session, buffer, static_cast<int>(buf_size), 0);
+			copy_and_send(command, session);
 		}
 		lock.unlock();
 	}

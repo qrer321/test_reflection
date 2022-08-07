@@ -4,34 +4,34 @@
 class delta_timer
 {
 public:
-	delta_timer();
+	delta_timer()
+		: delta_time_(0.f)
+	{}
 	~delta_timer() = default;
 
-	void Tick();
-	float GetDelta() const;
+	void Reset();
+	float Tick();
+	float GetDelta() const { return delta_time_; }
 
 private:
-	std::chrono::time_point<std::chrono::system_clock> chrono_start;
-	std::chrono::time_point<std::chrono::system_clock> chrono_end;
-	std::chrono::duration<float, std::ratio<1, 10>> chrono_delta;
+	std::chrono::steady_clock::time_point	current_;
+	std::chrono::steady_clock::time_point	prev_;
+	float delta_time_;
 };
 
-inline delta_timer::delta_timer()
-	: chrono_start()
-	, chrono_end()
-	, chrono_delta()
+inline void delta_timer::Reset()
 {
+	current_ = std::chrono::high_resolution_clock::now();
+	prev_ = current_;
 }
 
-inline void delta_timer::Tick()
+inline float delta_timer::Tick()
 {
-	chrono_start = std::chrono::system_clock::now();
-	chrono_end = std::chrono::system_clock::now();
+	current_ = std::chrono::high_resolution_clock::now();
 
-	chrono_delta = chrono_end - chrono_start;
-}
+	const double delta_time_double = std::chrono::duration<double>(current_ - prev_).count();
+	prev_ = current_;
 
-inline float delta_timer::GetDelta() const
-{
-	return chrono_delta.count();
+	delta_time_ = static_cast<float>(delta_time_double);
+	return delta_time_;
 }

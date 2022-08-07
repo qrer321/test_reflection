@@ -45,7 +45,7 @@ public:
 	std::unordered_map<std::string, UProperty*>& GetProperties() { return properties_; }
 	std::unordered_map<std::string, UFunction*>& GetFunctions() { return functions_; }
 	template <typename T> T GetPropertyValue(const std::string& prop_name) const;
-	template <typename T> void SetPropertyValue(std::string prop_name, T value);
+	template <typename T> void SetPropertyValue(const std::string& prop_name, T value);
 
 	// helper method
 	void SetObjectFlag(OBJECT_FLAG mark_enum) { flag_ = mark_enum | flag_; }
@@ -93,7 +93,7 @@ inline T UObject::GetPropertyValue(const std::string& prop_name) const
 }
 
 template<typename T>
-inline void UObject::SetPropertyValue(std::string prop_name, T value)
+inline void UObject::SetPropertyValue(const std::string& prop_name, T value)
 {
 	UProperty* prop_info = GetProperty(prop_name);
 	if (nullptr == prop_info)

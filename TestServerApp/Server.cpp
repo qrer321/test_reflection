@@ -2,6 +2,7 @@
 #include "helper_method_for_server.h"
 
 Server::Server()
+	: dc_time_(0.f)
 {
 	ServerInitialize();
 }
@@ -12,6 +13,7 @@ Server::~Server()
 	{
 		elem->join();
 	}
+	gc_thread_.join();
 
 	Reflection::GetInstance();
 	GarbageCollector::GetInstance();
@@ -46,6 +48,24 @@ void Server::IocpThreadFunction()
 				return;
 			}
 		}
+	}
+}
+
+void Server::GCFunction()
+{
+	while (true)
+	{
+		dc_.Tick();
+		dc_time_ += dc_.GetDelta();
+
+		// GC 동작시키기
+		if (dc_time_ > 10.f)
+		{
+			dc_time_ = 0.f;
+			GarbageCollector::GetInstance()->ActivateGarbageCollector();
+			std::cout << "Run Garbage Collector" << std::endl;
+		}
+		Sleep(1);
 	}
 }
 
@@ -102,10 +122,14 @@ void Server::ServerInitialize()
 
 	std::cout << "Server Started" << std::endl;
 	std::cout << "Start Server Connection Function..." << std::endl;
+
+	gc_thread_ = std::thread(&Server::GCFunction, this);
 }
 
 void Server::ServerRun()
 {
+	dc_.Reset();
+
 	while (true)
 	{
 		SOCKADDR_IN user_address = {};
@@ -117,6 +141,7 @@ void Server::ServerRun()
 		{
 			int error = static_cast<int>(GetLastError());
 			if (WSAEWOULDBLOCK == error)
+
 			{
 				Sleep(1);
 				continue;

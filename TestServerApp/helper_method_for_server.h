@@ -2,40 +2,39 @@
 #include "global.h"
 #include "ParseCommand.h"
 
-inline void Recv_NewConnecter(std::string recv_string)
+inline void Recv_NewConnecter(const std::string& recv_string)
 {
 	if (nullptr == server_instance)
 	{
 		return;
 	}
 
-	size_t name_pos = recv_string.find(":") + 2;
-	std::string client_name = recv_string.substr(name_pos, recv_string.size() - name_pos);
+	const size_t name_pos = recv_string.find(':') + 2;
+	const std::string client_name = recv_string.substr(name_pos, recv_string.size() - name_pos);
 
 	client_map[recv_data->socket_] = { client_name };
 
 	std::cout << "New Connecter : " << client_name << std::endl;
 }
 
-inline void Recv_CreateObject(std::string recv_string)
+inline void Recv_CreateObject(const std::string& recv_string)
 {
 	if (nullptr == server_instance)
 	{
 		return;
 	}
 
-	size_t name_pos = recv_string.find(":") + 2;
-	std::string object_name = recv_string.substr(name_pos, recv_string.size() - name_pos);
+	const size_t name_pos = recv_string.find(':') + 2;
+	const std::string object_name = recv_string.substr(name_pos, recv_string.size() - name_pos);
 	if (nullptr != Reflection::GetInstance()->FindObjectBasedOnName(object_name))
 	{
 		std::cout << "object with the same name exists" << std::endl;
 
-		string_copy("create denied...");
-		send(recv_data->socket_, buffer, static_cast<int>(buf_size), 0);
+		copy_and_send("create denied...", recv_data->socket_);
 		return;
 	}
 
-	auto new_object = NewObject<SomeTestClass>();
+	SomeTestClass* new_object = NewObject<SomeTestClass>();
 	new_object->SetOwnerSession(client_map[recv_data->socket_].client_name);
 	new_object->SetName(object_name);
 
@@ -43,31 +42,24 @@ inline void Recv_CreateObject(std::string recv_string)
 
 	// 동일한 세션인 경우 만들어진 오브젝트에 대한 정보
 	// 다른 세션에게는 어떤 세션이 오브젝트를 만들었다는 정보만을
-	std::string owner_session;
-	std::string other_session;
 
-	owner_session = object_name + " object created...";
-	other_session = client_map[recv_data->socket_].client_name + " was created " + object_name + " object...";
-
-	std::string order_string;
-	order_string += "Create Object : " + object_name + "\\" + client_map[recv_data->socket_].client_name;
+	const std::string to_owner_session = object_name + " object created...";
+	const std::string to_other_session = client_map[recv_data->socket_].client_name + " was created " + object_name + " object...";
+	const std::string order_string = "Create Object : " + object_name + "\\" + client_map[recv_data->socket_].client_name;
 
 	lock.lock();
 	for (const auto& session : server_instance->GetClientSessions())
 	{
 		if (session == recv_data->socket_)
 		{
-			string_copy(owner_session);
-			send(session, buffer, static_cast<int>(buf_size), 0);
+			copy_and_send(to_owner_session, session);
 		}
 		else
 		{
-			string_copy(other_session);
-			send(session, buffer, static_cast<int>(buf_size), 0);
+			copy_and_send(to_other_session, session);
 		}
 
-		string_copy(order_string);
-		send(session, buffer, static_cast<int>(buf_size), 0);
+		copy_and_send(order_string, session);
 	}
 	lock.unlock();
 }
@@ -102,8 +94,7 @@ inline void Recv_GetProperty(const std::string& object_name)
 		output_string += elem;
 	}
 
-	string_copy(output_string);
-	send(recv_data->socket_, buffer, static_cast<int>(buf_size), 0);
+	copy_and_send(output_string, recv_data->socket_);
 }
 
 inline void Recv_GetAllProperty()
@@ -112,6 +103,8 @@ inline void Recv_GetAllProperty()
 	{
 		Recv_GetProperty(object->GetName());
 	}
+
+	std::cout << client_map[recv_data->socket_].client_name << " Session Request All Property Info..." << std::endl;
 }
 
 inline void Recv_SetProperty(const std::string& recv_string)
@@ -132,9 +125,13 @@ inline void Recv_SetProperty(const std::string& recv_string)
 	// property setting
 	SetPropertyValue(find_object, property_name, value);
 
+	// command print
+	std::cout << client_map[recv_data->socket_].client_name << " Session Request " << object_name << "'s "
+		<< property_name << " value to " << value << std::endl;
+
 	// command send back
 	// to set property on the client
-	ResendCommand(recv_string, Resend_Command::OTHER_CLIENT);
+	ResendCommand(recv_string, RPC_TYPE::ALL_CLIENT);
 }
 
 inline void Recv_FunctionCall(const std::string& recv_string)
@@ -151,11 +148,8 @@ inline void Recv_FunctionCall(const std::string& recv_string)
 	UObject* find_object = nullptr;
 	UFunction* find_function = nullptr;
 
-	bool success_check = true;
-	success_check = ParseFunctionCall(recv_string, target, object_name,
-		function_name, input_params, find_object, find_function);
-	
-	if (false == success_check)
+	if (false == ParseFunctionCall(recv_string, target, object_name,
+		function_name, input_params, find_object, find_function))
 	{
 		return;
 	}
@@ -171,7 +165,7 @@ inline void Recv_FunctionCall(const std::string& recv_string)
 		else
 		{
 			// send function to target
-			ResendCommand(recv_string, Resend_Command::OTHER_CLIENT_NOT_ME);
+			ResendCommand(recv_string, RPC_TYPE::OTHER_CLIENT_NOT_ME);
 		}
 	}
 	else
@@ -187,17 +181,44 @@ inline void Recv_FunctionCall(const std::string& recv_string)
 		else
 		{
 			// send function to target
-			ResendCommand(recv_string, Resend_Command::OTHER_CLIENT_NOT_ME);
+			ResendCommand(recv_string, RPC_TYPE::OTHER_CLIENT_NOT_ME);
 		}
 	}
 }
 
+inline void Recv_DestroyObject(const std::string& recv_string)
+{
+	// Set Pending Kill
+	UObject* find_object = nullptr;
+	if (false == ParseDestroyCall(recv_string, find_object))
+	{
+		return;
+	}
+
+	SetPendingKill(find_object);
+	ResendCommand(recv_string, RPC_TYPE::ALL_CLIENT);
+}
+
 inline void Recv_Disconnect()
 {
-	SOCKET target_socket = *server_instance->client_sessions_.find(recv_data->socket_);
+	const SOCKET target_socket = *server_instance->client_sessions_.find(recv_data->socket_);
 
-	std::string disconnect_session = client_map[target_socket].client_name;
+	const std::string disconnect_session = client_map[target_socket].client_name;
 	std::cout << disconnect_session << " was disconnected..." << std::endl;
+
+	// 연결을 끊은 Session의 객체들 Pending Kill 설정
+	for (const auto& object : Reflection::GetInstance()->GetAllObject())
+	{
+		if(disconnect_session != object->GetOwnerSession())
+		{
+			continue;
+		}
+
+		std::string send_string = "Destroy Object : " + object->GetName();
+
+		SetPendingKill(object);
+		ResendCommand(send_string, RPC_TYPE::OTHER_CLIENT_NOT_ME);
+	}
 
 	client_map.erase(target_socket);
 	server_instance->client_sessions_.erase(target_socket);
@@ -236,6 +257,10 @@ inline void ToHelperMethod(Server* server, RecvOverlapped* data)
 	else if (std::string::npos != recv_string.find("Call Function : "))
 	{
 		Recv_FunctionCall(recv_string);
+	}
+	else if (std::string::npos != recv_string.find("Destroy Object : "))
+	{
+		Recv_DestroyObject(recv_string);
 	}
 	else if ("Disconnect Client" == recv_string)
 	{

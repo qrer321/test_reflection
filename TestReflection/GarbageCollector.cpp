@@ -30,25 +30,19 @@ void GarbageCollector::MarkingObject()
 
 	for (const auto& elem : Reflection::GetInstance()->object_bundle_)
 	{
-		if (true == elem->IsRootObject())
-		{
-			// root object skipped
-			continue;
-		}
-
 		if (false == elem->IsCollectable())
 		{
 			// none collectable object skipped
 			continue;
 		}
 
-		//if (false == elem->IsPendingKill())
-		//{
-		//	// none pending kill object skipped
-		//	continue;
-		//}
+		if (true == elem->IsPendingKill())
+		{
+			// none pending kill object skipped
+			continue;
+		}
 
-		// check ref_count?
+		elem->SetObjectFlag(OBJECT_FLAG::MARKED);
 
 		for (const auto& prop : elem->GetProperties())
 		{
@@ -69,6 +63,12 @@ void GarbageCollector::MarkingObject()
 
 	for (const auto& elem : Reflection::GetInstance()->object_bundle_)
 	{
+		if (true == elem->IsRootObject())
+		{
+			// root object skipped
+			continue;
+		}
+
 		if (false == elem->IsMarkedObject())
 		{
 			// unmarked objects collect

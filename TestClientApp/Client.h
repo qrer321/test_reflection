@@ -1,5 +1,6 @@
 #pragma once
-#include "..\TestReflection\global.h"
+#include "../TestReflection/global.h"
+#include "../TestReflection/delta_timer.h"
 
 class Client
 {
@@ -19,9 +20,13 @@ public:
 private:
 	void ClientInitialize();
 	void RecvFunction();
-
-	std::mutex client_lock_;
-	std::thread recv_thread_;
+	void GCFunction();
 
 	SOCKET session_socket_;
+	std::mutex client_lock_;
+	std::thread recv_thread_;
+	std::thread gc_thread_;
+
+	delta_timer dc_;
+	float		dc_time_;
 };

@@ -1,20 +1,24 @@
 #pragma once
 
-#include "..\TestReflection\global.h"
-#include "..\TestReflection\Reflection.h"
-#include "..\TestReflection\GarbageCollector.h"
-#include "..\TestReflection\SomeTestClass.h"
+#include "../TestReflection/global.h"
+#include "../TestReflection/Reflection.h"
+#include "../TestReflection/GarbageCollector.h"
+#include "../TestReflection/delta_timer.h"
+#include "../TestReflection/SomeTestClass.h"
 
 #pragma comment(lib, "TestReflection.lib")
 
 #include "Server.h"
 
-const size_t buf_size = 1024;
-char buffer[buf_size] = {};
-void string_copy(const std::string& input)
+constexpr size_t buf_size = 1024;
+inline char buffer[buf_size] = {};
+
+inline void copy_and_send(const std::string& input_string, const SOCKET& target_socket)
 {
 	memset(&(buffer[0]), 0, buf_size);
-	memcpy_s(buffer, buf_size, input.c_str(), input.size());
+	memcpy_s(buffer, buf_size, input_string.c_str(), input_string.size());
+
+	send(target_socket, buffer, static_cast<int>(buf_size), 0);
 }
 
 struct SessionStruct
@@ -28,10 +32,10 @@ struct PropertyStruct
 	std::vector<std::string>	properties_info;
 };
 
-enum Resend_Command
+enum RPC_TYPE
 {
 	TO_SERVER,
-	OTHER_CLIENT,
+	ALL_CLIENT,
 	OTHER_CLIENT_NOT_ME,
 };
 

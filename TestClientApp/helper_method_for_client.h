@@ -2,92 +2,94 @@
 #include "global.h"
 #include "ParseCommand.h"
 
-inline void Call_CreateObject(Client* client)
+inline Client* client_instance = nullptr;
+
+inline void Call_CreateObject()
 {
-	if (nullptr == client)
+	if (nullptr == client_instance)
 	{
 		return;
 	}
 
-	std::cout << "임의적인 클래스로 생성합니다." << std::endl;
-	std::cout << "객체 명 입력... : ";
+	std::cout << "Create as an 'SomeTestClass' class." << std::endl;
+	std::cout << "Enter object name... : ";
 
 	std::string object_name;
 	std::getline(std::cin, object_name);
 	object_name = "NewObject : " + object_name;
 	std::cout << std::endl;
 
-	SOCKET session_socket = client->GetSessionSocket();
-	string_copy(object_name);
-	send(session_socket, buffer, static_cast<int>(buf_size), 0);
+	copy_and_send(object_name, client_instance->GetSessionSocket());
 }
 
-inline void Call_GetAllProperty(Client* client)
+inline void Call_GetAllProperty()
 {
-	if (nullptr == client)
+	if (nullptr == client_instance)
 	{
 		return;
 	}
 
-	std::cout << "모든 객체 정보를 받아옵니다..." << std::endl;
-	SOCKET session_socket = client->GetSessionSocket();
-
-	std::string packet_string = "GetAllProperty";
-	string_copy(packet_string);
-	send(session_socket, buffer, static_cast<int>(buf_size), 0);
+	std::cout << "Get all object properties..." << std::endl;
+	copy_and_send("GetAllProperty", client_instance->GetSessionSocket());
 }
 
-inline void Call_SetProperty(Client* client)
+inline void Call_SetProperty()
 {
-	if (nullptr == client)
+	if (nullptr == client_instance)
 	{
 		return;
 	}
 
-	std::cout << "객체 명 입력..." << std::endl;
+	std::cout << "Enter object name..." << std::endl;
 
 	std::string object_name;
 	std::getline(std::cin, object_name);
 
-	if (false == PrintProperty(object_name))
+	UObject* find_object = nullptr;
+	if (false == PrintProperty(object_name, find_object))
 	{
 		return;
 	}
 
-	std::cout << "변경하려는 Property 명을 입력하세요 : ";
+	std::cout << "Enter the property name : ";
 	std::string property_name;
 	std::getline(std::cin, property_name);
 
-	std::cout << "값 입력 : ";
+	if (nullptr == find_object->GetProperty(property_name))
+	{
+		std::cout << "There is no object named " << property_name << std::endl;
+		return;
+	}
+
+	std::cout << "Enter Value : ";
 	std::string value;
 	std::getline(std::cin, value);
 
 	std::string send_string = "SetProperty : ";
 	send_string += object_name + "\\" + property_name + "\\" + value;
-	string_copy(send_string);
-	send(client->GetSessionSocket(), buffer, static_cast<int>(buf_size), 0);
+	copy_and_send(send_string, client_instance->GetSessionSocket());
 }
 
-inline void Call_FunctionCall(Client* client)
+inline void Call_FunctionCall()
 {
-	if (nullptr == client)
+	if (nullptr == client_instance)
 	{
 		return;
 	}
 
 	// Input Object Name
-	std::cout << "객체 명 입력... : ";
+	std::cout << "Enter object name... : ";
 	std::string object_name;
 	std::getline(std::cin, object_name);
 
 	UObject* find_object = Reflection::GetInstance()->FindObjectBasedOnName(object_name);
 	if (nullptr == find_object)
 	{
-		std::cout << object_name << " 객체는 존재하지 않습니다." << std::endl;
+		std::cout << "There is no object named \"" << object_name << "\"" << std::endl;
 		return;
 	}
 
-	std::unordered_map<std::string, UFunction*> functions = find_object->GetFunctions();
+	const std::unordered_map<std::string, UFunction*> functions = find_object->GetFunctions();
 	for (const auto& func : functions)
 	{
 		std::cout << func.first << std::endl;
@@ -96,20 +98,20 @@ inline void Call_FunctionCall(Client* client)
 	// Input Function Name
 	std::string function_name;
 	std::cout << std::endl;
-	std::cout << "호출하려는 함수 명을 입력하세요 : ";
+	std::cout << "Enter the name of the function : ";
 	std::getline(std::cin, function_name);
 
 	UFunction* find_function = find_object->GetFunction(function_name);
 	if (nullptr == find_function)
 	{
-		std::cout << function_name << " 함수는 존재하지 않습니다." << std::endl;
+		std::cout << "There is no function named \"" << function_name << "\"" << std::endl;
 		return;
 	}
 
 	// Print Function's Info
 	std::cout << std::endl;
 	std::cout << function_name << "'s Parameters " << find_function->GetReturnType() << "( ";
-	std::vector<std::string> params = find_function->GetFunctionParams();
+	const std::vector<std::string>& params = find_function->GetFunctionParams();
 	for (const auto& param : params)
 	{
 		std::cout << param << ", ";
@@ -120,7 +122,7 @@ inline void Call_FunctionCall(Client* client)
 	if (false == params.empty())
 	{
 		// 당장은 정수형 매개변수만이 가능함.
-		std::cout << "매개변수에 값을 입력하세요.(띄어쓰기로 구분합니다) : ";
+		std::cout << "Enter a value for the parameter (separated by spacing): ";
 		std::getline(std::cin, input_params);
 	}
 	else
@@ -134,27 +136,50 @@ inline void Call_FunctionCall(Client* client)
 
 	std::string send_string = "Call Function : ";
 	send_string += target + "\\" + object_name + "\\" + function_name + "\\" + input_params;
-	string_copy(send_string);
-	send(client->GetSessionSocket(), buffer, static_cast<int>(buf_size), 0);
+	copy_and_send(send_string, client_instance->GetSessionSocket());
 }
 
-inline void Call_Disconnect(Client* client)
+inline void Call_DestroyObject()
 {
-	std::cout << "접속을 종료합니다." << std::endl;
+	if (nullptr == client_instance)
+	{
+		return;
+	}
 
-	SOCKET session_socket = client->GetSessionSocket();
+	copy_and_send("GetAllProperty", client_instance->GetSessionSocket());
+	std::cout << std::endl;
 
-	std::string disconnect_string = "Disconnect Client";
-	string_copy(disconnect_string);
-	send(session_socket, buffer, static_cast<int>(buf_size), 0);
+	Sleep(5);
+	std::cout << "select the object you want to destroy" << std::endl;
+
+	std::string selected_object;
+	std::getline(std::cin, selected_object);
+	std::cout << std::endl;
+
+	if (nullptr == Reflection::GetInstance()->FindObjectBasedOnName(selected_object))
+	{
+		std::cout << "There is no object named \"" << selected_object << "\"" << std::endl;
+		return;
+	}
+
+	selected_object = "Destroy Object : " + selected_object;
+	copy_and_send(selected_object, client_instance->GetSessionSocket());
+}
+
+inline void Call_Disconnect()
+{
+	std::cout << "Exit the connection." << std::endl;
+	copy_and_send("Disconnect Client", client_instance->GetSessionSocket());
+
+	GarbageCollector::GetInstance()->ClearGarbageCollector();
 }
 
 inline void ToHelperMethod(const std::string& recv_string)
 {
 	if (std::string::npos != recv_string.find("Create Object : "))
 	{
-		size_t name_pos = recv_string.find(":") + 2;
-		size_t name_end_pos = recv_string.find("\\");
+		size_t name_pos = recv_string.find(':') + 2;
+		size_t name_end_pos = recv_string.find('\\');
 		std::string object_name = recv_string.substr(name_pos, name_end_pos - name_pos);
 		std::string owner_name = recv_string.substr(name_end_pos + 1, recv_string.size() - (name_end_pos + 1));
 	
@@ -168,8 +193,8 @@ inline void ToHelperMethod(const std::string& recv_string)
 		std::string property_name;
 		std::string value;
 
-		size_t name_pos = recv_string.find(":") + 2;
-		size_t end_pos = recv_string.find("\\");
+		size_t name_pos = recv_string.find(':') + 2;
+		size_t end_pos = recv_string.find('\\');
 		object_name = recv_string.substr(name_pos, end_pos - name_pos);
 
 		UObject* find_object = Reflection::GetInstance()->FindObjectBasedOnName(object_name);
@@ -180,7 +205,7 @@ inline void ToHelperMethod(const std::string& recv_string)
 		}
 
 		size_t temp_pos = end_pos + 1;
-		end_pos = recv_string.find("\\", temp_pos);
+		end_pos = recv_string.find('\\', temp_pos);
 		property_name = recv_string.substr(temp_pos, end_pos - temp_pos);
 		value = recv_string.substr(end_pos + 1, recv_string.size() - (end_pos + 1));
 
@@ -217,6 +242,13 @@ inline void ToHelperMethod(const std::string& recv_string)
 
 			find_function->CallFunction(input_vector);
 		}
+	}
+	else if (std::string::npos != recv_string.find("Destroy Object : "))
+	{
+		UObject* find_object = nullptr;
+		ParseDestroyCall(recv_string, find_object);
+
+		SetPendingKill(find_object);
 	}
 	else
 	{

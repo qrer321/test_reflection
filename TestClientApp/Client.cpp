@@ -2,6 +2,7 @@
 #include "helper_method_for_client.h"
 
 Client::Client()
+	: dc_time_(0.f)
 {
 	ClientInitialize();
 }
@@ -26,6 +27,24 @@ void Client::RecvFunction()
 
 		std::string recv_string = buffer;
 		ToHelperMethod(recv_string);
+	}
+}
+
+void Client::GCFunction()
+{
+	while (g_check)
+	{
+		dc_.Tick();
+		dc_time_ += dc_.GetDelta();
+
+		// GC 동작시키기
+		if (dc_time_ > 10.f)
+		{
+			dc_time_ = 0.f;
+			GarbageCollector::GetInstance()->ActivateGarbageCollector();
+			std::cout << "Run Garbage Collector" << std::endl;
+		}
+		Sleep(1);
 	}
 }
 
@@ -87,22 +106,16 @@ void Client::ClientInitialize()
 	client_name = "New Connecter : " + client_name;
 	send(session_socket_, client_name.c_str(), static_cast<int>(client_name.size()), 0);
 	recv_thread_ = std::thread(&Client::RecvFunction, this);
+	gc_thread_ = std::thread(&Client::GCFunction, this);
 }
 
 void Client::ClientRun()
 {
-	//while (true)
-	//{
-	//	std::string input_string;
-	//	std::cin >> input_string;
-	//
-	//	char buffer[1024] = {};
-	//	memcpy_s(buffer, sizeof(buffer), input_string.c_str(), input_string.size());
-	//	send(session_socket_, buffer, sizeof(buffer), 0);
-	//}
-
 	bool break_console = false;
 	std::cin.ignore();
+
+	client_instance = this;
+	dc_.Reset();
 
 	while (true)
 	{
@@ -111,7 +124,7 @@ void Client::ClientRun()
 
 		output_string = output_string +
 			"1. 객체 생성                    2. 모든 객체 정보 확인\n" +
-			"3. 프로퍼티 변경                4. GC 수행\n" +
+			"3. 프로퍼티 변경                4. 객체 삭제\n" +
 			"5. 함수 호출";
 		std::cout << output_string;
 		std::cout << std::endl << std::endl;
@@ -121,30 +134,28 @@ void Client::ClientRun()
 		switch (std::stoi(input_value))
 		{
 		case 1:
-			Call_CreateObject(this);
+			Call_CreateObject();
 			break;
 		case 2:
-			Call_GetAllProperty(this);
+			Call_GetAllProperty();
 			break;
 		case 3:
-			Call_SetProperty(this);
+			Call_SetProperty();
 			break;
 		case 4:
-			//system("cls");
-			//std::cout << "Activated Garbage Collector" << std::endl << std::endl;
-			//ActivateGarbageCollector();
-			//system("pause");
+			Call_DestroyObject();
 			break;
 		case 5:
-			Call_FunctionCall(this);
+			Call_FunctionCall();
 			break;
 		default:
-			Call_Disconnect(this);
+			Call_Disconnect();
 			shutdown(session_socket_, SD_BOTH);
 			closesocket(session_socket_);
 
 			g_check = false;
 			recv_thread_.join();
+			gc_thread_.join();
 			session_socket_ = INVALID_SOCKET;
 			Sleep(1);
 
