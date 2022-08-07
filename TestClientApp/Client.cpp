@@ -62,7 +62,7 @@ void Client::ClientInitialize()
 	session_socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (INVALID_SOCKET == session_socket_)
 	{
-		std::cout << "session socket is invaild socket" << std::endl;
+		std::cout << "session socket is invalid socket" << std::endl;
 		return;
 	}
 
