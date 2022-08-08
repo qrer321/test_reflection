@@ -17,6 +17,18 @@ inline void Recv_NewConnecter(const std::string& recv_string)
 	helper_lock.unlock();
 
 	std::cout << "New Connecter : " << client_name << " " << std::to_string(recv_data->socket_) << std::endl;
+
+	for (const auto& object : Reflection::GetInstance()->GetAllObject())
+	{
+		std::string order_string = "Create Object : " + object->GetName() + '\\' + object->GetOwnerSession();
+		SendPacket(order_string, RPC_TYPE::RPC_Client);
+
+		for (const auto& prop : object->GetProperties())
+		{
+			order_string = "SetProperty : " + object->GetName() + "\\" + prop.first + "\\" + GetPropertyValue(object, prop.first);
+			SendPacket(order_string, RPC_TYPE::RPC_Client);
+		}
+	}
 }
 
 inline void Recv_CreateObject(const std::string& recv_string)

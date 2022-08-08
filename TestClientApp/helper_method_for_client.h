@@ -4,6 +4,10 @@
 
 inline Client* client_instance = nullptr;
 
+//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////// Client Call Method ///////////////////////////////
+///////////////////////////////  With Main Thread  ///////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
 inline void Call_CreateObject()
 {
 	if (nullptr == client_instance)
@@ -249,90 +253,131 @@ inline void Call_SetGCMax()
 	std::string gc_timer = "GCMax : " + std::to_string(time_int);
 	copy_and_send(gc_timer, client_instance->GetSessionSocket());
 }
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////// Client Recv Method ///////////////////////////////
+///////////////////////////////  With Recv Thread  ///////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+inline void Recv_CreateObject(const std::string recv_string)
+{
+	size_t name_pos = recv_string.find(':') + 2;
+	size_t name_end_pos = recv_string.find('\\');
+	std::string object_name = recv_string.substr(name_pos, name_end_pos - name_pos);
+	std::string owner_name = recv_string.substr(name_end_pos + 1, recv_string.size() - (name_end_pos + 1));
+
+	auto new_object = NewObject<SomeTestClass>();
+	new_object->SetName(object_name);
+	new_object->SetOwnerSession(owner_name);
+}
+
+inline void Recv_SetProperty(const std::string& recv_string)
+{
+	std::string object_name;
+	std::string property_name;
+	std::string value;
+
+	size_t name_pos = recv_string.find(':') + 2;
+	size_t end_pos = recv_string.find('\\');
+	object_name = recv_string.substr(name_pos, end_pos - name_pos);
+
+	UObject* find_object = Reflection::GetInstance()->FindObjectBasedOnName(object_name);
+	if (nullptr == find_object)
+	{
+		std::cout << "object does not exist" << std::endl;
+		return;
+	}
+
+	size_t temp_pos = end_pos + 1;
+	end_pos = recv_string.find('\\', temp_pos);
+	property_name = recv_string.substr(temp_pos, end_pos - temp_pos);
+	value = recv_string.substr(end_pos + 1, recv_string.size() - (end_pos + 1));
+
+	SetPropertyValue(find_object, property_name, value);
+}
+
+inline void Recv_FunctionCall(const std::string& recv_string)
+{
+	std::string target;
+	std::string object_name;
+	std::string function_name;
+	std::string input_params;
+	UObject* find_object = nullptr;
+	UFunction* find_function = nullptr;
+
+	bool success_check = true;
+	success_check = ParseFunctionCall(recv_string, target, object_name,
+		function_name, input_params, find_object, find_function);
+
+	if (false == success_check)
+	{
+		return;
+	}
+
+	std::cout << find_object->GetOwnerSession() << " client call function "
+		<< function_name << std::endl;
+	if ("none" == input_params)
+	{
+		find_function->CallFunction();
+	}
+	else
+	{
+		std::vector<int> input_vector;
+		ParseParams(input_params, input_vector);
+
+		find_function->CallFunction(input_vector);
+	}
+}
+
+inline void Recv_DestroyObject(const std::string& recv_string)
+{
+	UObject* find_object = nullptr;
+	ParseDestroyCall(recv_string, find_object);
+
+	SetPendingKill(find_object);
+	client_instance->ForcedGCRun();
+}
+
+inline void Recv_SetGCMax(const std::string& recv_string)
+{
+	const size_t name_pos = recv_string.find(':') + 2;
+	const std::string time = recv_string.substr(name_pos, recv_string.size() - name_pos);
+
+	client_instance->SetGCTimer(std::stof(time));
+}
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+
+
 
 inline void ToHelperMethod(const std::string& recv_string)
 {
 	if (std::string::npos != recv_string.find("Create Object : "))
 	{
-		size_t name_pos = recv_string.find(':') + 2;
-		size_t name_end_pos = recv_string.find('\\');
-		std::string object_name = recv_string.substr(name_pos, name_end_pos - name_pos);
-		std::string owner_name = recv_string.substr(name_end_pos + 1, recv_string.size() - (name_end_pos + 1));
-	
-		auto new_object = NewObject<SomeTestClass>();
-		new_object->SetName(object_name);
-		new_object->SetOwnerSession(owner_name);
+		Recv_CreateObject(recv_string);
 	}
 	else if (std::string::npos != recv_string.find("SetProperty : "))
 	{
-		std::string object_name;
-		std::string property_name;
-		std::string value;
-
-		size_t name_pos = recv_string.find(':') + 2;
-		size_t end_pos = recv_string.find('\\');
-		object_name = recv_string.substr(name_pos, end_pos - name_pos);
-
-		UObject* find_object = Reflection::GetInstance()->FindObjectBasedOnName(object_name);
-		if (nullptr == find_object)
-		{
-			std::cout << "object does not exist" << std::endl;
-			return;
-		}
-
-		size_t temp_pos = end_pos + 1;
-		end_pos = recv_string.find('\\', temp_pos);
-		property_name = recv_string.substr(temp_pos, end_pos - temp_pos);
-		value = recv_string.substr(end_pos + 1, recv_string.size() - (end_pos + 1));
-
-		SetPropertyValue(find_object, property_name, value);
+		Recv_SetProperty(recv_string);
 	}
 	else if (std::string::npos != recv_string.find("Call Function : "))
 	{
-		std::string target;
-		std::string object_name;
-		std::string function_name;
-		std::string input_params;
-		UObject* find_object = nullptr;
-		UFunction* find_function = nullptr;
-
-		bool success_check = true;
-		success_check = ParseFunctionCall(recv_string, target, object_name,
-			function_name, input_params, find_object, find_function);
-
-		if (false == success_check)
-		{
-			return;
-		}
-
-		std::cout << find_object->GetOwnerSession() << " client call function " 
-			<< function_name <<  std::endl;
-		if ("none" == input_params)
-		{
-			find_function->CallFunction();
-		}
-		else
-		{
-			std::vector<int> input_vector;
-			ParseParams(input_params, input_vector);
-
-			find_function->CallFunction(input_vector);
-		}
+		Recv_FunctionCall(recv_string);
 	}
 	else if (std::string::npos != recv_string.find("Destroy Object : "))
 	{
-		UObject* find_object = nullptr;
-		ParseDestroyCall(recv_string, find_object);
-
-		SetPendingKill(find_object);
-		client_instance->ForcedGCRun();
+		Recv_DestroyObject(recv_string);
 	}
 	else if (std::string::npos != recv_string.find("GCMax : "))
 	{
-		const size_t name_pos = recv_string.find(':') + 2;
-		const std::string time = recv_string.substr(name_pos, recv_string.size() - name_pos);
-
-		client_instance->SetGCTimer(std::stof(time));
+		Recv_SetGCMax(recv_string);
 	}
 	else
 	{

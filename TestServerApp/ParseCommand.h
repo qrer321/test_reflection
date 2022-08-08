@@ -84,6 +84,7 @@ inline bool ParseFunctionCall(const std::string& recv_string,
 
 inline void ParseParams(const std::string& input_params, std::vector<int>& input_vector)
 {
+	// int형의 인자밖에 받지 못함.
 	size_t sub_pos = 0;
 	while (true)
 	{

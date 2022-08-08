@@ -10,7 +10,7 @@
 #include "Client.h"
 
 constexpr size_t buf_size = 1024;
-inline char buffer[buf_size] = {};
+static char buffer[buf_size] = {};
 
 inline void copy_and_send(const std::string& input_string, const SOCKET& target_socket)
 {
