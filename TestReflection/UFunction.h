@@ -126,6 +126,9 @@ void UFunction::CallFunction(Args ...arguments)
 
 	SerializeFunction(arguments...);
 
+	// 들어오는 매개변수가 int 형태로 한정되어 있기 때문에
+	// 타입 체크를 굳이 하지 않아도 된다.
+	// -> 이후 분기 처리를 통해 다양한 인자가 들어온다면 그 때 사용될 수 있을것이다.
 	//if (false == ArgumentsVerifyCorrect(arguments...))
 	//{
 	//	return;
@@ -165,12 +168,13 @@ inline void UFunction::CheckParam(Arg&& param, bool& check_param, int& check_cou
 {
 	std::string test = typeid(param).name();
 
-	if (function_params_[check_count++] == typeid(param).name() ||
-		typeid(class UObject*).hash_code() == typeid(param).hash_code())
+	if (function_params_[check_count] == typeid(param[check_count]).name() ||
+		typeid(class UObject*).hash_code() == typeid(param[check_count]).hash_code())
 	{
 		return;
 	}
 
+	++check_count;
 	check_param = false;
 }
 
