@@ -50,6 +50,7 @@ private:
 	std::mutex server_lock_;
 	std::vector<std::shared_ptr<std::thread>> thread_list_;
 	std::thread gc_thread_;
+	bool thread_check_;
 
 	delta_timer dc_;
 	float		dc_time_;

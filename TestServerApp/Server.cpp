@@ -4,17 +4,21 @@
 Server::Server()
 	: dc_time_(0.f)
 	, dc_max_(30.f)
+	, thread_check_(true)
 {
 	ServerInitialize();
 }
 
 Server::~Server()
 {
+	// thread 자체적으로 join 해야한다?
 	for (const auto& elem : thread_list_)
 	{
 		elem->join();
 	}
 	gc_thread_.join();
+
+	
 
 	GarbageCollector::GetInstance()->Destroy();
 	Reflection::GetInstance()->Destroy();
@@ -22,7 +26,7 @@ Server::~Server()
 
 void Server::IocpThreadFunction()
 {
-	while (true)
+	while (thread_check_)
 	{
 		RecvOverlapped* data = {};
 		DWORD number_of_bytes_transferred;
@@ -62,7 +66,7 @@ void Server::IocpThreadFunction()
 
 void Server::GCFunction()
 {
-	while (true)
+	while (thread_check_)
 	{
 		dc_.Tick();
 		dc_time_ += dc_.GetDelta();
