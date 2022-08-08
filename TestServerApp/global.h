@@ -39,6 +39,7 @@ enum RPC_TYPE
 	RPC_NetMulticast,
 };
 
+std::mutex helper_lock;
 static Server* server_instance = nullptr;
 RecvOverlapped* recv_data = nullptr;
 std::unordered_map<SOCKET, SessionStruct> client_map;
@@ -49,7 +50,13 @@ static void SetPropertyValue(UObject* object, const std::string& prop_name, cons
 	auto find_iter = object->GetProperties().find(prop_name);
 	if (find_iter == object->GetProperties().end())
 	{
-		std::cout << "잘못된 Property 명을 입력하였습니다..." << std::endl << std::endl;
+		std::cout << "There is no property named " << prop_name << std::endl;
+		return;
+	}
+
+	if (true == value.empty())
+	{
+		std::cout << "Please enter a value..." << std::endl;
 		return;
 	}
 

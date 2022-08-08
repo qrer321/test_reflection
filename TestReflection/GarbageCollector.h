@@ -1,4 +1,5 @@
 #pragma once
+#include <mutex>
 
 class GarbageCollector
 {
@@ -38,4 +39,5 @@ private:
 	void SweepAllObject();
 
 	static GarbageCollector* gc_instance;
+	std::mutex test_lock;
 };

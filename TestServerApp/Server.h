@@ -34,6 +34,7 @@ public:
 
 	void ServerRun();
 	void SetGCTimer(float time) { dc_max_ = time; }
+	void ForcedGCRun() { dc_time_ = dc_max_; }
 	const std::mutex& GetServerLock() { return server_lock_; }
 
 	std::set<SOCKET> client_sessions_;

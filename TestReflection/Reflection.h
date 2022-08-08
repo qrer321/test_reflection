@@ -59,6 +59,11 @@ template <typename T,
 		  typename = std::enable_if_t<std::is_base_of_v<UObject, T>>>
 void AddToRoot(T* object)
 {
+	if (nullptr == object)
+	{
+		return;
+	}
+
 	if (true == object->CheckObjectFlag(OBJECT_FLAG::ROOT))
 	{
 		return;
@@ -71,6 +76,11 @@ template <typename T,
 		  typename = std::enable_if_t<std::is_base_of_v<UObject, T>>>
 void SetPendingKill(T* object, bool all_reachable_object = false)
 {
+	if (nullptr == object)
+	{
+		return;
+	}
+
 	object->SetObjectFlag(OBJECT_FLAG::PENDING_KILL);
 
 	// setting pending kill all reachable object

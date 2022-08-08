@@ -1,6 +1,23 @@
 #pragma once
 #include "global.h"
 
+inline void SendPacket(const std::string& command, RPC_TYPE type)
+{
+	helper_lock.lock();
+	if (RPC_TYPE::RPC_NetMulticast == type)
+	{
+		for (const auto& session : server_instance->GetClientSessions())
+		{
+			copy_and_send(command, session);
+		}
+	}
+	else if (RPC_TYPE::RPC_Client == type)
+	{
+		copy_and_send(command, recv_data->socket_);
+	}
+	helper_lock.unlock();
+}
+
 inline bool ParsePropertyCall(const std::string& recv_string,
 							  std::string& object_name, std::string& property_name,
 							  std::string& value, UObject*& find_object)
@@ -14,7 +31,7 @@ inline bool ParsePropertyCall(const std::string& recv_string,
 	{
 		std::cout << "object does not exist" << std::endl;
 
-		copy_and_send("property setting denied...", recv_data->socket_);
+		SendPacket("property setting denied...", RPC_TYPE::RPC_Client);
 		return false;
 	}
 
@@ -44,7 +61,7 @@ inline bool ParseFunctionCall(const std::string& recv_string,
 	{
 		std::cout << "object does not exist" << std::endl;
 
-		copy_and_send("function call denied...", recv_data->socket_);
+		SendPacket("function call denied...", RPC_TYPE::RPC_Client);
 		return false;
 	}
 
@@ -58,7 +75,7 @@ inline bool ParseFunctionCall(const std::string& recv_string,
 	{
 		std::cout << "function does not exist" << std::endl;
 
-		copy_and_send("function call denied...", recv_data->socket_);
+		SendPacket("function call denied...", RPC_TYPE::RPC_Client);
 		return false;
 	}
 
@@ -98,33 +115,9 @@ inline bool ParseDestroyCall(const std::string& recv_string, UObject*& find_obje
 	{
 		std::cout << "object does not exist" << std::endl;
 
-		copy_and_send("destroy call denied...", recv_data->socket_);
+		SendPacket("destory call denied...", RPC_TYPE::RPC_Client);
 		return false;
 	}
 
 	return true;
-}
-
-inline void ResendCommand(const std::string& command, RPC_TYPE type)
-{
-	if (RPC_TYPE::RPC_NetMulticast == type)
-	{
-		for (const auto& session : server_instance->GetClientSessions())
-		{
-			copy_and_send(command, session);
-		}
-	}
-	else if (RPC_TYPE::RPC_Client == type)
-	{
-		for (const auto& session : server_instance->GetClientSessions())
-		{
-			if (session != recv_data->socket_)
-			{
-				continue;
-			}
-
-			copy_and_send(command, session);
-			break;
-		}
-	}
 }

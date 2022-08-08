@@ -145,24 +145,28 @@ namespace msgpack {
 		static const bool value = true;
 	};
 
-	class Packer {
+	class Packer 
+	{
 	public:
-
 		template<class ... Types>
-		void operator()(const Types &... args) {
+		void operator()(const Types &... args) 
+		{
 			(pack_type(std::forward<const Types&>(args)), ...);
 		}
 
 		template<class ... Types>
-		void process(const Types &... args) {
+		void process(const Types &... args) 
+		{
 			(pack_type(std::forward<const Types&>(args)), ...);
 		}
 
-		const std::vector<uint8_t>& vector() const {
+		const std::vector<uint8_t>& vector() const 
+		{
 			return serialized_object;
 		}
 
-		void clear() {
+		void clear() 
+		{
 			serialized_object.clear();
 		}
 

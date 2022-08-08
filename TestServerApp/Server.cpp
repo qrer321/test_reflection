@@ -112,15 +112,14 @@ void Server::ServerInitialize()
 	accept_socket_ = WSASocket(AF_INET, SOCK_STREAM, 0, nullptr, 0, WSA_FLAG_OVERLAPPED);
 	if (INVALID_SOCKET == accept_socket_)
 	{
-		std::cout << "accept socket is invaild socket" << std::endl;
+		std::cout << "accept socket is an invaild socket" << std::endl;
 		return;
 	}
 
 	unsigned long mode = 1;
 	if (SOCKET_ERROR == ioctlsocket(accept_socket_, FIONBIO, &mode))
 	{
-		DWORD code = GetLastError();
-		std::cout << "ioctlsocket error : " << code << std::endl;
+		std::cout << "ioctlsocket error : " << GetLastError() << std::endl;
 		return;
 	}
 

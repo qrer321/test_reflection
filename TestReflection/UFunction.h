@@ -38,6 +38,8 @@ private:
 	void SerializeFunction(Args&&... arguments);
 	template <typename ReturnType, typename... Args>
 	void BindFunction(std::function<ReturnType(Args...)> function);
+	template <typename Arg>
+	void CheckParam(Arg&& param, bool& check_param, int& check_count);
 
 	std::string function_return_type_;
 	std::vector<std::string> function_params_;
@@ -85,24 +87,24 @@ void UFunction::BindFunction(std::function<ReturnType(Args...)> function)
 	{
 		// decay_t -> remove ref, const, volatile from Args
 		using ArgsTuple = std::tuple<std::decay_t<Args>...>;
-		ArgsTuple arguments;
+		ArgsTuple arg_tuple;
 
 		auto bind_function = [&]<typename Tuple, std::size_t... Index>(Tuple&& tuple, std::index_sequence<Index...>) -> ReturnType
 		{
 			(unpacker(std::get<Index>(tuple)), ...);
-			return function(std::get<Index>(std::move(tuple))...);
+			return function(std::get<Index>(std::forward<Tuple>(tuple))...);
 		};
 
 		// to compile time, replace enable if
 		if constexpr (false == std::is_void_v<ReturnType>)
 		{
 			// for non-void function
-			function_return_ = bind_function(std::forward<ArgsTuple>(arguments), std::make_index_sequence<std::tuple_size_v<ArgsTuple>>{});
+			function_return_ = bind_function(std::forward<ArgsTuple>(arg_tuple), std::make_index_sequence<std::tuple_size_v<ArgsTuple>>{});
 		}
 		else
 		{
 			// for void function
-			bind_function(std::forward<ArgsTuple>(arguments), std::make_index_sequence<std::tuple_size_v<ArgsTuple>>{});
+			bind_function(std::forward<ArgsTuple>(arg_tuple), std::make_index_sequence<std::tuple_size_v<ArgsTuple>>{});
 		}
 	};
 }
@@ -124,10 +126,10 @@ void UFunction::CallFunction(Args ...arguments)
 
 	SerializeFunction(arguments...);
 
-	/*if (false == ArgumentsVerifyCorrect(arguments...))
-	{
-		return;
-	}*/
+	//if (false == ArgumentsVerifyCorrect(arguments...))
+	//{
+	//	return;
+	//}
 	
 	msgpack::Unpacker unpacker;
 	if (false == serialize_vector_.empty())
@@ -153,17 +155,36 @@ void UFunction::SerializeFunction(Args&&... arguments)
 
 	serialize_vector_ = packer.vector();
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<typename Arg>
+inline void UFunction::CheckParam(Arg&& param, bool& check_param, int& check_count)
+{
+	std::string test = typeid(param).name();
+
+	if (function_params_[check_count++] == typeid(param).name() ||
+		typeid(class UObject*).hash_code() == typeid(param).hash_code())
+	{
+		return;
+	}
+
+	check_param = false;
+}
 
 template<typename ...Args>
 bool UFunction::ArgumentsVerifyCorrect(Args&&... arguments)
 {
-	using ArgsTuple = std::tuple<std::decay_t<Args>...>;
-	ArgsTuple args = std::make_tuple(arguments...);;
-
-	// recursive lambda..?
+	bool check_param = true;
+	int check_count = 0;
+	(CheckParam(arguments, check_param, check_count), ...);
+	
+	if (false == check_param)
+	{
+		return false;
+	}
 
 	return true;
 }

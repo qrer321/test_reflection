@@ -325,6 +325,7 @@ inline void ToHelperMethod(const std::string& recv_string)
 		ParseDestroyCall(recv_string, find_object);
 
 		SetPendingKill(find_object);
+		client_instance->ForcedGCRun();
 	}
 	else if (std::string::npos != recv_string.find("GCMax : "))
 	{

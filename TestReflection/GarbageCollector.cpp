@@ -45,12 +45,13 @@ void GarbageCollector::MarkingObject()
 			
 			if (true == Reflection::GetInstance()->ObjectExistence(identify_object))
 			{
-				if (identify_object->CheckObjectFlag(OBJECT_FLAG::MARKED))
+				if (false == identify_object->IsPendingKill())
 				{
 					continue;
 				}
-
-				identify_object->SetObjectFlag(OBJECT_FLAG::MARKED);
+				                                              
+				// to prevent dangling pointers
+				elem->SetPropertyValue<UObject*>(prop.first, nullptr);
 			}
 		}
 	}
@@ -69,9 +70,10 @@ void GarbageCollector::MarkingObject()
 			continue;
 		}
 
-		if (false == elem->IsMarkedObject())
+		if (false == elem->IsMarkedObject() || true == elem->IsPendingKill())
 		{
-			// unmarked objects collect
+			// collect unmarked objects
+			// collect pending kill objects
 			Reflection::GetInstance()->CollectSweepObject(elem);
 		}
 	}
@@ -87,15 +89,16 @@ void GarbageCollector::SweepObject()
 		std::cout << sweep_object->GetName() << " is sweeped" << std::endl;
 		Reflection::GetInstance()->Delete(sweep_object);
 		delete sweep_object;
+		sweep_object = nullptr;
 	}
 }
 
 void GarbageCollector::SweepAllObject()
 {
-	for (const auto& object_elem : Reflection::GetInstance()->GetAllObject())
+	for (auto object_elem : Reflection::GetInstance()->GetAllObject())
 	{
-		std::cout << object_elem->GetName() << " is sweeped" << std::endl;
-		Reflection::GetInstance()->Delete(object_elem);
-		delete object_elem;
+		Reflection::GetInstance()->CollectSweepObject(object_elem);
 	}
+
+	SweepObject();
 }

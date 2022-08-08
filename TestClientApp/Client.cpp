@@ -134,6 +134,10 @@ void Client::ClientRun()
 		std::cout << std::endl << std::endl;
 		
 		std::getline(std::cin, input_value);
+		if (true == input_value.empty())
+		{
+			continue;
+		}
 
 		switch (std::stoi(input_value))
 		{
@@ -161,21 +165,19 @@ void Client::ClientRun()
 		default:
 			Call_Disconnect();
 
-			g_check = false;
-			recv_thread_.join();
-			gc_thread_.join();
-
 			shutdown(session_socket_, SD_BOTH);
 			closesocket(session_socket_);
 			session_socket_ = INVALID_SOCKET;
-			Sleep(1);
+			Sleep(100);
+
+			g_check = false;
+			recv_thread_.join();
+			gc_thread_.join();
 
 			WSACleanup();
 			break_console = true;
 			break;
 		}
-
-		system("pause");
 
 		if (true == break_console)
 		{
