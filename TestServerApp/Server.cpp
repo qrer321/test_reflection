@@ -3,6 +3,7 @@
 
 Server::Server()
 	: dc_time_(0.f)
+	, dc_max_(30.f)
 {
 	ServerInitialize();
 }
@@ -67,11 +68,18 @@ void Server::GCFunction()
 		dc_time_ += dc_.GetDelta();
 
 		// GC 동작시키기
-		if (dc_time_ > 10.f)
+		if (dc_time_ > dc_max_)
 		{
 			dc_time_ = 0.f;
-			GarbageCollector::GetInstance()->ActivateGarbageCollector();
 			std::cout << "Run Garbage Collector" << std::endl;
+			GarbageCollector::GetInstance()->ActivateGarbageCollector();
+
+			// For Property Replication
+			std::cout << "Update All Object's Properties" << std::endl;
+			for (const auto& object : Reflection::GetInstance()->GetAllObject())
+			{
+				Send_PropertyUpdate(object, object->GetProperties());
+			}
 		}
 		Sleep(1);
 	}

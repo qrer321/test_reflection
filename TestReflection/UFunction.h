@@ -13,10 +13,10 @@ public:
 	{}
 	~UFunction() = default;
 
-	UFunction(const UFunction& other) = delete;
-	UFunction(UFunction&& other) = delete;
-	UFunction& operator= (const UFunction& other) = delete;
-	UFunction& operator= (UFunction&& other) = delete;
+	UFunction(const UFunction& other)				= delete;
+	UFunction(UFunction&& other)					= delete;
+	UFunction& operator= (const UFunction& other)	= delete;
+	UFunction& operator= (UFunction&& other)		= delete;
 
 
 	template <typename ReturnType>
@@ -33,7 +33,7 @@ public:
 
 private:
 	template <typename... Args>
-	bool ArgumentsVerifyCorrect(Args... arguments);
+	bool ArgumentsVerifyCorrect(Args&&... arguments);
 	template <typename... Args>
 	void SerializeFunction(Args&&... arguments);
 	template <typename ReturnType, typename... Args>
@@ -87,7 +87,7 @@ void UFunction::BindFunction(std::function<ReturnType(Args...)> function)
 		using ArgsTuple = std::tuple<std::decay_t<Args>...>;
 		ArgsTuple arguments;
 
-		auto bind_function = [&] <typename Tuple, std::size_t...Index>(Tuple && tuple, std::index_sequence<Index...>) -> ReturnType
+		auto bind_function = [&]<typename Tuple, std::size_t... Index>(Tuple&& tuple, std::index_sequence<Index...>) -> ReturnType
 		{
 			(unpacker(std::get<Index>(tuple)), ...);
 			return function(std::get<Index>(std::move(tuple))...);
@@ -158,7 +158,7 @@ void UFunction::SerializeFunction(Args&&... arguments)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename ...Args>
-bool UFunction::ArgumentsVerifyCorrect(Args... arguments)
+bool UFunction::ArgumentsVerifyCorrect(Args&&... arguments)
 {
 	using ArgsTuple = std::tuple<std::decay_t<Args>...>;
 	ArgsTuple args = std::make_tuple(arguments...);;

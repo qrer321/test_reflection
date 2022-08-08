@@ -3,6 +3,7 @@
 
 Client::Client()
 	: dc_time_(0.f)
+	, dc_max_(30.f)
 {
 	ClientInitialize();
 }
@@ -40,7 +41,7 @@ void Client::GCFunction()
 		dc_time_ += dc_.GetDelta();
 
 		// GC 동작시키기
-		if (dc_time_ > 10.f)
+		if (dc_time_ > dc_max_)
 		{
 			dc_time_ = 0.f;
 			GarbageCollector::GetInstance()->ActivateGarbageCollector();
@@ -127,7 +128,8 @@ void Client::ClientRun()
 		output_string = output_string +
 			"1. 객체 생성                    2. 모든 객체 정보 확인\n" +
 			"3. 프로퍼티 변경                4. 객체 삭제\n" +
-			"5. 함수 호출";
+			"5. 함수 호출                    6. 클라이언트 더미 업데이트\n" + 
+			"7. GC 최대 시간 설정";
 		std::cout << output_string;
 		std::cout << std::endl << std::endl;
 		
@@ -150,14 +152,21 @@ void Client::ClientRun()
 		case 5:
 			Call_FunctionCall();
 			break;
+		case 6:
+			DummyUpdate();
+			break;
+		case 7:
+			Call_SetGCMax();
+			break;
 		default:
 			Call_Disconnect();
-			shutdown(session_socket_, SD_BOTH);
-			closesocket(session_socket_);
 
 			g_check = false;
 			recv_thread_.join();
 			gc_thread_.join();
+
+			shutdown(session_socket_, SD_BOTH);
+			closesocket(session_socket_);
 			session_socket_ = INVALID_SOCKET;
 			Sleep(1);
 

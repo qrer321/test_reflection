@@ -34,12 +34,11 @@ struct PropertyStruct
 
 enum RPC_TYPE
 {
-	TO_SERVER,
-	ALL_CLIENT,
-	OTHER_CLIENT_NOT_ME,
+	RPC_Server,
+	RPC_Client,
+	RPC_NetMulticast,
 };
 
-std::mutex lock;
 static Server* server_instance = nullptr;
 RecvOverlapped* recv_data = nullptr;
 std::unordered_map<SOCKET, SessionStruct> client_map;

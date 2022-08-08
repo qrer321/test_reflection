@@ -12,10 +12,10 @@
 
 enum OBJECT_FLAG
 {
-	ROOT = 0x01 << 0,
-	PENDING_KILL = 0x01 << 1,
-	COLLECTABLE = 0x01 << 2,
-	MARKED = 0x01 << 3,
+	ROOT			= 0x01 << 0,
+	PENDING_KILL	= 0x01 << 1,
+	COLLECTABLE		= 0x01 << 2,
+	MARKED			= 0x01 << 3,
 };
 
 enum NetRole
@@ -35,29 +35,28 @@ public:
 	}
 	virtual ~UObject();
 
-	UObject(const UObject& other) = delete;
-	UObject(UObject&& other) = delete;
-	UObject& operator= (const UObject& other) = delete;
-	UObject& operator= (UObject&& other) = delete;
+	UObject(const UObject& other)				= delete;
+	UObject(UObject&& other)					= delete;
+	UObject& operator= (const UObject& other)	= delete;
+	UObject& operator= (UObject&& other)		= delete;
 
-	// get, set value method
+
 	std::unordered_map<std::string, UProperty*>& GetProperties() { return properties_; }
 	std::unordered_map<std::string, UFunction*>& GetFunctions() { return functions_; }
 	template <typename T> T GetPropertyValue(const std::string& prop_name) const;
 	template <typename T> void SetPropertyValue(const std::string& prop_name, T value);
 
-	// helper method
-	void SetObjectFlag(OBJECT_FLAG mark_enum) { flag_ = mark_enum | flag_; }
-	void RemoveObjectFlag(OBJECT_FLAG mark_enum) { flag_ = ~mark_enum & flag_; }
-	bool CheckObjectFlag(OBJECT_FLAG mark_enum) { return flag_ & mark_enum ? true : false; }
+	void SetObjectFlag(OBJECT_FLAG mark_enum)		{ flag_ = mark_enum | flag_; }
+	void RemoveObjectFlag(OBJECT_FLAG mark_enum)	{ flag_ = ~mark_enum & flag_; }
+	bool CheckObjectFlag(OBJECT_FLAG mark_enum)		{ return flag_ & mark_enum ? true : false; }
 
-	bool IsCollectable() { return CheckObjectFlag(OBJECT_FLAG::COLLECTABLE); }
-	bool IsRootObject() { return CheckObjectFlag(OBJECT_FLAG::ROOT); }
-	bool IsMarkedObject() { return CheckObjectFlag(OBJECT_FLAG::MARKED); }
-	bool IsPendingKill() { return CheckObjectFlag(OBJECT_FLAG::PENDING_KILL); }
+	bool IsCollectable()	{ return CheckObjectFlag(OBJECT_FLAG::COLLECTABLE); }
+	bool IsRootObject()		{ return CheckObjectFlag(OBJECT_FLAG::ROOT); }
+	bool IsMarkedObject()	{ return CheckObjectFlag(OBJECT_FLAG::MARKED); }
+	bool IsPendingKill()	{ return CheckObjectFlag(OBJECT_FLAG::PENDING_KILL); }
 
 	void SetOwnerSession(const std::string& session) { owner_session_ = session; }
-	std::string GetOwnerSession() const { return owner_session_; }
+	const std::string& GetOwnerSession() const { return owner_session_; }
 
 	void SetName(const std::string& name) { name_ = name; }
 	std::string GetName() const { return name_; }

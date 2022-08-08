@@ -14,7 +14,7 @@ inline void Recv_NewConnecter(const std::string& recv_string)
 
 	client_map[recv_data->socket_] = { client_name };
 
-	std::cout << "New Connecter : " << client_name << std::endl;
+	std::cout << "New Connecter : " << client_name << " " << std::to_string(recv_data->socket_) << std::endl;
 }
 
 inline void Recv_CreateObject(const std::string& recv_string)
@@ -40,14 +40,10 @@ inline void Recv_CreateObject(const std::string& recv_string)
 
 	std::cout << "Created New Object : " << object_name << std::endl;
 
-	// 동일한 세션인 경우 만들어진 오브젝트에 대한 정보
-	// 다른 세션에게는 어떤 세션이 오브젝트를 만들었다는 정보만을
-
 	const std::string to_owner_session = object_name + " object created...";
 	const std::string to_other_session = client_map[recv_data->socket_].client_name + " was created " + object_name + " object...";
 	const std::string order_string = "Create Object : " + object_name + "\\" + client_map[recv_data->socket_].client_name;
 
-	lock.lock();
 	for (const auto& session : server_instance->GetClientSessions())
 	{
 		if (session == recv_data->socket_)
@@ -61,7 +57,6 @@ inline void Recv_CreateObject(const std::string& recv_string)
 
 		copy_and_send(order_string, session);
 	}
-	lock.unlock();
 }
 
 inline void Recv_GetProperty(const std::string& object_name)
@@ -99,12 +94,22 @@ inline void Recv_GetProperty(const std::string& object_name)
 
 inline void Recv_GetAllProperty()
 {
-	for (const auto& object : Reflection::GetInstance()->GetAllObject())
+	if (nullptr == server_instance)
 	{
-		Recv_GetProperty(object->GetName());
+		return;
 	}
 
 	std::cout << client_map[recv_data->socket_].client_name << " Session Request All Property Info..." << std::endl;
+
+	for (const auto& object : Reflection::GetInstance()->GetAllObject())
+	{
+		if (true == object->IsPendingKill())
+		{
+			continue;
+		}
+
+		Recv_GetProperty(object->GetName());
+	}
 }
 
 inline void Recv_SetProperty(const std::string& recv_string)
@@ -131,7 +136,25 @@ inline void Recv_SetProperty(const std::string& recv_string)
 
 	// command send back
 	// to set property on the client
-	ResendCommand(recv_string, RPC_TYPE::ALL_CLIENT);
+	ResendCommand(recv_string, RPC_TYPE::RPC_NetMulticast);
+}
+
+inline void Send_PropertyUpdate(UObject* object, const std::unordered_map<std::string, UProperty*>& properties)
+{
+	std::string object_name;
+	std::string property_name;
+	std::string value;
+	std::string send_string;
+
+	object_name = object->GetName();
+	for (const auto& prop : properties)
+	{
+		property_name = prop.first;
+		value = GetPropertyValue(object, property_name);
+
+		send_string = "SetProperty : " + object_name + '\\' + property_name + '\\' + value;
+		ResendCommand(send_string, RPC_TYPE::RPC_NetMulticast);
+	}
 }
 
 inline void Recv_FunctionCall(const std::string& recv_string)
@@ -154,18 +177,40 @@ inline void Recv_FunctionCall(const std::string& recv_string)
 		return;
 	}
 
+	// if owner of the target object does not match the current session
+	if ("server" == target)
+	{
+		std::string object_owner = find_object->GetOwnerSession();
+		std::string current_session = client_map[recv_data->socket_].client_name;
+
+		if (object_owner != current_session)
+		{
+			std::cout << object_name << " is not " << current_session << "'s object" << std::endl;
+			std::cout << "Server Function Call Dropped" << std::endl;
+			return;
+		}
+	}
+
 	// check params & check target
 	if ("none" == input_params)
 	{
-		if ("Server" == target)
+		if ("server" == target)
 		{
 			std::cout << client_map[recv_data->socket_].client_name << " Call Function : " << function_name << "\n";
 			find_function->CallFunction();
 		}
+		else if ("client" == target)
+		{
+			ResendCommand(recv_string, RPC_TYPE::RPC_Client);
+		}
+		else if ("netmulticast" == target)
+		{
+			ResendCommand(recv_string, RPC_TYPE::RPC_NetMulticast);
+		}
 		else
 		{
-			// send function to target
-			ResendCommand(recv_string, RPC_TYPE::OTHER_CLIENT_NOT_ME);
+			std::cout << "wrong target" << std::endl;
+			return;
 		}
 	}
 	else
@@ -173,15 +218,23 @@ inline void Recv_FunctionCall(const std::string& recv_string)
 		std::vector<int> input_vector;
 		ParseParams(input_params, input_vector);
 
-		if ("Server" == target)
+		if ("server" == target)
 		{
 			std::cout << client_map[recv_data->socket_].client_name << " Call Function : " << function_name << "\n";
 			find_function->CallFunction(input_vector);
 		}
+		else if ("client" == target)
+		{
+			ResendCommand(recv_string, RPC_TYPE::RPC_Client);
+		}
+		else if ("netmulticast" == target)
+		{
+			ResendCommand(recv_string, RPC_TYPE::RPC_NetMulticast);
+		}
 		else
 		{
-			// send function to target
-			ResendCommand(recv_string, RPC_TYPE::OTHER_CLIENT_NOT_ME);
+			std::cout << "wrong target" << std::endl;
+			return;
 		}
 	}
 }
@@ -196,14 +249,14 @@ inline void Recv_DestroyObject(const std::string& recv_string)
 	}
 
 	SetPendingKill(find_object);
-	ResendCommand(recv_string, RPC_TYPE::ALL_CLIENT);
+	ResendCommand(recv_string, RPC_TYPE::RPC_NetMulticast);
 }
 
 inline void Recv_Disconnect()
 {
-	const SOCKET target_socket = *server_instance->client_sessions_.find(recv_data->socket_);
+	const SOCKET& target_socket = *server_instance->client_sessions_.find(recv_data->socket_);
 
-	const std::string disconnect_session = client_map[target_socket].client_name;
+	const std::string& disconnect_session = client_map[target_socket].client_name;
 	std::cout << disconnect_session << " was disconnected..." << std::endl;
 
 	// 연결을 끊은 Session의 객체들 Pending Kill 설정
@@ -217,7 +270,7 @@ inline void Recv_Disconnect()
 		std::string send_string = "Destroy Object : " + object->GetName();
 
 		SetPendingKill(object);
-		ResendCommand(send_string, RPC_TYPE::OTHER_CLIENT_NOT_ME);
+		ResendCommand(send_string, RPC_TYPE::RPC_NetMulticast);
 	}
 
 	client_map.erase(target_socket);
@@ -229,6 +282,16 @@ inline void Recv_Disconnect()
 	{
 		closesocket(target_socket);
 	}
+}
+
+inline void Recv_SetGCMax(const std::string& recv_string)
+{
+	const size_t name_pos = recv_string.find(':') + 2;
+	const std::string time = recv_string.substr(name_pos, recv_string.size() - name_pos);
+	server_instance->SetGCTimer(std::stof(time));
+	
+	std::string send_string = "GCMax : " + time;
+	ResendCommand(send_string, RPC_TYPE::RPC_NetMulticast);
 }
 
 inline void ToHelperMethod(Server* server, RecvOverlapped* data)
@@ -261,6 +324,10 @@ inline void ToHelperMethod(Server* server, RecvOverlapped* data)
 	else if (std::string::npos != recv_string.find("Destroy Object : "))
 	{
 		Recv_DestroyObject(recv_string);
+	}
+	else if (std::string::npos != recv_string.find("GCMax : "))
+	{
+		Recv_SetGCMax(recv_string);
 	}
 	else if ("Disconnect Client" == recv_string)
 	{

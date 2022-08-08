@@ -39,10 +39,10 @@ static void SetPropertyValue(UObject* object, const std::string& prop_name, cons
 
 	if ("SomeTestClass*" == prop_type)
 	{
-		UObject* other = Reflection::GetInstance()->FindObjectBasedOnName(value);
-		if (nullptr != other)
+		UObject* target_object = Reflection::GetInstance()->FindObjectBasedOnName(value);
+		if (nullptr != target_object)
 		{
-			object->SetPropertyValue(prop_name, other);
+			object->SetPropertyValue(prop_name, target_object);
 			return;
 		}
 	}

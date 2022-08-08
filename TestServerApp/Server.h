@@ -33,6 +33,8 @@ public:
 	Server& operator= (Server&& other) = delete;
 
 	void ServerRun();
+	void SetGCTimer(float time) { dc_max_ = time; }
+	const std::mutex& GetServerLock() { return server_lock_; }
 
 	std::set<SOCKET> client_sessions_;
 	const std::set<SOCKET>& GetClientSessions() const { return client_sessions_; }
@@ -50,4 +52,5 @@ private:
 
 	delta_timer dc_;
 	float		dc_time_;
+	float		dc_max_;
 };

@@ -9,20 +9,20 @@ public:
 		, property_address_(nullptr)
 		, property_size_(0)
 	{}
-
-	UProperty(std::string type_name, size_t type_hash, void* address, size_t size)
-		: property_type_(std::move(type_name))
+	UProperty(const std::string& type_name, size_t type_hash, void* address, size_t size)
+		: property_type_(type_name)
 		, property_type_hash_(type_hash)
 		, property_address_(address)
 		, property_size_(size)
 	{}
-
-	UProperty(const UProperty& other) = delete;
-	UProperty(UProperty&& other) = delete;
-	UProperty operator= (const UProperty& other) = delete;
-	UProperty operator= (UProperty&& other) = delete;
-
 	~UProperty() = default;
+
+	UProperty(const UProperty& other)				= delete;
+	UProperty(UProperty&& other)					= delete;
+	UProperty operator= (const UProperty& other)	= delete;
+	UProperty operator= (UProperty&& other)			= delete;
+
+	
 
 	std::string GetType() const { return property_type_; }
 	size_t GetTypeHash() const { return property_type_hash_; }

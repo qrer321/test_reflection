@@ -39,10 +39,10 @@ private:
 	Reflection() = default;
 	~Reflection() = default;
 
-	static Reflection* reflection_instance_;
+	static Reflection*		reflection_instance_;
 
-	std::set<UObject*> object_bundle_;
-	std::queue<UObject*> sweep_queue_;
+	std::set<UObject*>		object_bundle_;
+	std::queue<UObject*>	sweep_queue_;
 };
 
 template <typename T, 

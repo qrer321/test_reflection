@@ -16,6 +16,7 @@ public:
 	void ClientRun();
 
 	SOCKET GetSessionSocket() const { return session_socket_; }
+	void SetGCTimer(float time) { dc_max_ = time; }
 
 private:
 	void ClientInitialize();
@@ -29,4 +30,5 @@ private:
 
 	delta_timer dc_;
 	float		dc_time_;
+	float		dc_max_;
 };

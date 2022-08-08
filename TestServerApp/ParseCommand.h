@@ -107,27 +107,24 @@ inline bool ParseDestroyCall(const std::string& recv_string, UObject*& find_obje
 
 inline void ResendCommand(const std::string& command, RPC_TYPE type)
 {
-	if (RPC_TYPE::ALL_CLIENT == type)
+	if (RPC_TYPE::RPC_NetMulticast == type)
 	{
-		lock.lock();
 		for (const auto& session : server_instance->GetClientSessions())
 		{
 			copy_and_send(command, session);
 		}
-		lock.unlock();
 	}
-	else if (RPC_TYPE::OTHER_CLIENT_NOT_ME == type)
+	else if (RPC_TYPE::RPC_Client == type)
 	{
-		lock.lock();
 		for (const auto& session : server_instance->GetClientSessions())
 		{
-			if (session == recv_data->socket_)
+			if (session != recv_data->socket_)
 			{
 				continue;
 			}
 
 			copy_and_send(command, session);
+			break;
 		}
-		lock.unlock();
 	}
 }

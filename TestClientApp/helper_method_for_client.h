@@ -29,8 +29,38 @@ inline void Call_GetAllProperty()
 		return;
 	}
 
-	std::cout << "Get all object properties..." << std::endl;
-	copy_and_send("GetAllProperty", client_instance->GetSessionSocket());
+	std::cout << "Server? or Own Client?" << std::endl;
+	std::string target_session;
+	std::getline(std::cin, target_session);
+
+	if ("Server" == target_session)
+	{
+		std::cout << "Get all object properties...to Server" << std::endl;
+		copy_and_send("GetAllProperty", client_instance->GetSessionSocket());
+	}
+	else
+	{
+		std::cout << "Get all object properties...to Own Client" << std::endl;
+
+		for (const auto& object : Reflection::GetInstance()->GetAllObject())
+		{
+			if (true == object->IsPendingKill())
+			{
+				continue;
+			}
+
+			std::string object_name = object->GetName();
+			std::cout << "Object Name : " << object_name << std::endl;
+			std::cout << "member variable count : " << object->GetProperties().size() << std::endl;
+
+			for (const auto& elem : object->GetProperties())
+			{
+				std::cout << elem.second->GetType() << " " << elem.first << "\t" << GetPropertyValue(object, elem.first) << std::endl;
+			}
+
+			std::cout << std::endl;
+		}
+	}
 }
 
 inline void Call_SetProperty()
@@ -57,7 +87,7 @@ inline void Call_SetProperty()
 
 	if (nullptr == find_object->GetProperty(property_name))
 	{
-		std::cout << "There is no object named " << property_name << std::endl;
+		std::cout << "There is no property named " << property_name << std::endl;
 		return;
 	}
 
@@ -131,7 +161,7 @@ inline void Call_FunctionCall()
 	}
 
 	std::string target;
-	std::cout << "Server Or Other(Client)" << std::endl;
+	std::cout << "server / client / netmulticast" << std::endl;
 	std::getline(std::cin, target);
 
 	std::string send_string = "Call Function : ";
@@ -172,6 +202,52 @@ inline void Call_Disconnect()
 	copy_and_send("Disconnect Client", client_instance->GetSessionSocket());
 
 	GarbageCollector::GetInstance()->ClearGarbageCollector();
+}
+
+inline void DummyUpdate()
+{
+	if (nullptr == client_instance)
+	{
+		return;
+	}
+
+	std::cout << "Enter object name..." << std::endl;
+
+	std::string object_name;
+	std::getline(std::cin, object_name);
+
+	UObject* find_object = nullptr;
+	if (false == PrintProperty(object_name, find_object))
+	{
+		return;
+	}
+
+	std::cout << "Enter the property name : ";
+	std::string property_name;
+	std::getline(std::cin, property_name);
+
+	if (nullptr == find_object->GetProperty(property_name))
+	{
+		std::cout << "There is no property named " << property_name << std::endl;
+		return;
+	}
+
+	std::cout << "Enter Value : ";
+	std::string value;
+	std::getline(std::cin, value);
+
+	SetPropertyValue(find_object, property_name, value);
+	std::cout << "client call dummy updated" << std::endl;
+}
+
+inline void Call_SetGCMax()
+{
+	std::string time_string;
+	std::getline(std::cin, time_string);
+	int time_int = std::stoi(time_string);
+
+	std::string gc_timer = "GCMax : " + std::to_string(time_int);
+	copy_and_send(gc_timer, client_instance->GetSessionSocket());
 }
 
 inline void ToHelperMethod(const std::string& recv_string)
@@ -249,6 +325,13 @@ inline void ToHelperMethod(const std::string& recv_string)
 		ParseDestroyCall(recv_string, find_object);
 
 		SetPendingKill(find_object);
+	}
+	else if (std::string::npos != recv_string.find("GCMax : "))
+	{
+		const size_t name_pos = recv_string.find(':') + 2;
+		const std::string time = recv_string.substr(name_pos, recv_string.size() - name_pos);
+
+		client_instance->SetGCTimer(std::stof(time));
 	}
 	else
 	{

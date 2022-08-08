@@ -30,12 +30,6 @@ void GarbageCollector::MarkingObject()
 
 	for (const auto& elem : Reflection::GetInstance()->object_bundle_)
 	{
-		if (false == elem->IsCollectable())
-		{
-			// none collectable object skipped
-			continue;
-		}
-
 		if (true == elem->IsPendingKill())
 		{
 			// none pending kill object skipped
@@ -66,6 +60,12 @@ void GarbageCollector::MarkingObject()
 		if (true == elem->IsRootObject())
 		{
 			// root object skipped
+			continue;
+		}
+
+		if (false == elem->IsCollectable())
+		{
+			// none collectable object skipped
 			continue;
 		}
 
