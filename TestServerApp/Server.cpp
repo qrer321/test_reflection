@@ -11,17 +11,27 @@ Server::Server()
 
 Server::~Server()
 {
-	// thread 자체적으로 join 해야한다?
+	thread_check_ = false;
+
 	for (const auto& elem : thread_list_)
 	{
+		// GetQueuedCompletionStatue로 인해 대기상태로 들어간 thread 강제 활성화
+		// 활성화 후 thread_check_ false로 thread while문 종료
+		PostQueuedCompletionStatus(handle_, -1, 0, nullptr);
+	}
+	for (const auto& elem : thread_list_)
+	{
+		// while문 종료된 iocp thread들 join 처리
 		elem->join();
 	}
-	gc_thread_.join();
-
 	
+	gc_thread_.join();
 
 	GarbageCollector::GetInstance()->Destroy();
 	Reflection::GetInstance()->Destroy();
+
+	std::cout << std::endl << std::endl;
+	std::cout << "Server End" << std::endl;
 }
 
 void Server::IocpThreadFunction()
@@ -41,6 +51,10 @@ void Server::IocpThreadFunction()
 		}
 
 		data = reinterpret_cast<RecvOverlapped*>(completion_key);
+		if (nullptr == data)
+		{
+			continue;
+		}
 
 		ToHelperMethod(this, data);
 
